@@ -17,3 +17,5 @@ class SubscriberNode(Node):
             "right_wheel": msg.right_wheel,
             "distance_sensor": msg.distance_sensor
         }
+
+        #self.get_logger().info("Received attack state")
