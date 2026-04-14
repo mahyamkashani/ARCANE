@@ -4,7 +4,7 @@ GOAL
 - Reason about {component: attack_type}
 - Apply attacks
 '''
-from pr2_control import MAX_WHEEL_SPEED # 3.0   
+from pr2_control import MAX_WHEEL_SPEED, LEFT_FINGER_MOTOR, RIGHT_FINGER_MOTOR # 3.0   
 
 class AttackExecutor:
 
@@ -35,9 +35,9 @@ class AttackExecutor:
 
     
     # Attack Types
-    def apply_attack(self, component, attack_type):
-        # low level rep.
-        component = self.component_map.get(component, [])
+    def apply_attack(self, component_name, attack_type):
+        # Get low level representation
+        component = self.component_map.get(component_name, [])
 
 
         if attack_type == "STOP":
@@ -60,6 +60,7 @@ class AttackExecutor:
 
         # underspeed
         if attack_type == "UNDERSPEED":
+            #print("applying underspeed attack")
             for name in component:
                 #print(name)
                 motor = self.supervisor.getDevice(name)
@@ -78,9 +79,31 @@ class AttackExecutor:
                     motor.setPosition(float('inf'))
                     motor.setVelocity(-MAX_WHEEL_SPEED * 0.5)
 
+        # Gripper attacks
+        if attack_type == "GRIP_WEAK":
+            """Reduce gripper torque to make gripping weak"""
+            if component_name == "left_gripper":
+                motor = self.supervisor.getDevice(LEFT_FINGER_MOTOR)
+                if motor:
+                    motor.setAvailableTorque(0.01)  # Set to minimal torque
+            
+            elif component_name == "right_gripper":
+                motor = self.supervisor.getDevice(RIGHT_FINGER_MOTOR)
+                if motor:
+                    motor.setAvailableTorque(0.01)  # Set to minimal torque
 
-        # arm go crazy
+        # In progress...
+        if attack_type == "GRIP_STRONG":
+            """Increase gripper torque to make gripping very strong"""
+            if component_name == "left_gripper":
+                motor = self.supervisor.getDevice(LEFT_FINGER_MOTOR)
+                if motor:
+                    max_torque = motor.getMaxTorque()
+                    motor.setAvailableTorque(max_torque * 10.0)  # Increase beyond normal
+            
+            elif component_name == "right_gripper":
+                motor = self.supervisor.getDevice(RIGHT_FINGER_MOTOR)
+                if motor:
+                    max_torque = motor.getMaxTorque()
+                    motor.setAvailableTorque(max_torque * 10.0)  # Increase beyond normal
 
-        # to much force on gripper
-
-        # ...

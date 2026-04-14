@@ -9,7 +9,7 @@ def disruption(S, tau, epsilon, current_task, current_goal):
 
 
 # Def 7: monotonic degradation function
-def monotonic_degradation(S, tau, epsilon, current_task, current_goal):
+def monotonic_degradation(S, tau, epsilon, current_task, current_goal, alpha_crit, alpha_base):
     value = 1
     for d in S:
 
@@ -18,18 +18,18 @@ def monotonic_degradation(S, tau, epsilon, current_task, current_goal):
             epsilon.get((d, current_goal), 0)
         )
         if level == 2:
-            value = value - 0.2
+            value = value - alpha_crit
         elif level == 1:
-            value = value - 0.05
+            value = value - alpha_base
     
     #print(f'Psi value {max(value,0)}')
     return max(value, 0)
 
 
 # Def 7: Tolerable Degradation
-def degradation(S, tau, epsilon, current_task, current_goal):
+def degradation(S, tau, epsilon, current_task, current_goal, theta_crit, theta_base, alpha_crit, alpha_base):
 
-    psi = monotonic_degradation(S, tau, epsilon, current_task, current_goal)
+    psi = monotonic_degradation(S, tau, epsilon, current_task, current_goal, alpha_crit, alpha_base)
 
     for d in S:
         level = max(
@@ -37,9 +37,9 @@ def degradation(S, tau, epsilon, current_task, current_goal):
             epsilon.get((d, current_goal), 0)
         )
         if level == 2:
-            theta = 0.85 # theta_crit
+            theta = theta_crit # theta_crit
         elif level == 1:
-            theta = 0.75 # theta_base
+            theta = theta_base
         else:
             continue
 

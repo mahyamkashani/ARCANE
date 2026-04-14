@@ -51,7 +51,7 @@ def pickup_object(supervisor, arm, object_name, timestep, resilience_check=None,
     
 
     # exact pos robot needs to be in (for now)
-    # x = -2.83701
+    # x = -4.63701
     # y = 0.258347
 
     # joints: 

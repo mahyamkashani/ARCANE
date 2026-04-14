@@ -12,8 +12,8 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.0676702869230689 -0.07251826553814886 0.995068758142415 4.776634449961282
-  position -6.012879157195768 17.928826424698222 3.25092016700499
+  orientation -0.17990755789523993 -0.146971934913509 0.972642031252994 4.484463914450693
+  position -1.9762414958671228 17.370831580568932 6.7392951413858375
 }
 TexturedBackground {
 }
@@ -27,8 +27,11 @@ RectangleArena {
   }
 }
 Pr2 {
-  translation -4.91701 0.258347 -0.017623
+  translation -4.63701 0.258347 -0.017623
   controller "pr2_controller"
+  controllerArgs [
+    "configs/experiment1.json"
+  ]
   supervisor TRUE
 }
 DEF box1 WoodenBox {

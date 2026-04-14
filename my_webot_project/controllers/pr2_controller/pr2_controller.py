@@ -1,131 +1,193 @@
+'''
+Goal
+- Read JSON config
+- Set task, tau, epsilopn, kappa
+- Set thresholds (theta_crit and theta_base)
+- Listen for attacks via ROS 2
+'''
 import rclpy
+import sys 
+import json
+import os
 from controller import Supervisor
-from ros2_subscriber import SubscriberNode
+
 from resilience_manager import ResilienceManager
 from ids import IDS
-from examples import navigate, pickup_object, navigagte_and_pickup_object
 import task
-from pr2_control import WHEEL_NAMES, LEFT_ARM_NAMES, RIGHT_ARM_NAMES
+from pr2_control import WHEEL_NAMES, LEFT_ARM_NAMES, RIGHT_ARM_NAMES, LEFT_FINGER_MOTOR, RIGHT_FINGER_MOTOR
 from attack_executor import AttackExecutor
 from component_mapping import COMPONENT_MAP
+from ros2_subscriber import SubscriberNode
 
+# ---------------------
+# Load Conig
+# ---------------------
+#base_dir = os.path.dirname(__file__)
+config_path = sys.argv[1]
+print(config_path)
+with open(config_path) as f:
+    config = json.load(f)
+
+# ----------------------
 # Webot Setup
+# ----------------------
 supervisor = Supervisor()
 timestep = int(supervisor.getBasicTimeStep())
 
-# ROS init and Node instance
+# ---------------------
+# ROS2 setup
+# ---------------------
 rclpy.init()
-sub_node = SubscriberNode()
+subscriber_node = SubscriberNode()
 
-# Init attack executor
+#-----------------------
+# Init core modules
+# ----------------------
+devices = WHEEL_NAMES + LEFT_ARM_NAMES + RIGHT_ARM_NAMES + [LEFT_FINGER_MOTOR, RIGHT_FINGER_MOTOR]
+
+RM = ResilienceManager(devices)
+ids = IDS(devices)
 attack_executor = AttackExecutor(supervisor, COMPONENT_MAP)
 
-# Task Setup ----------------------------------------------
+# ------------------------
+# Task Setup 
+# ------------------------
+task_type = config["task"]["type"]
+goal_pos_name = config["task"]["goal"]
+object_name = config["task"]["object"]
+arm = config["task"]["arm"]
 
-# Task setup
-current_task = navigagte_and_pickup_object
+# Select task function
+if task_type == "navigate":
+    current_task = task.navigate_to_goal
 
-goal_name = "table2"
-object_name = "water_bottle" 
+elif task_type == "pickup":
+    current_task = task.pickup_object
+
+elif task_type == "navigate_and_pickup":
+    current_task = task.navigagte_and_pickup_object
+
+else:
+    raise ValueError(f"Unknown task type: {task_type}")
 
 # Waypoints from Webots
-current_task["waypoints"][goal_name] = supervisor.getFromDef(goal_name).getPosition()
+waypoints = {}
+waypoints[goal_pos_name] = supervisor.getFromDef(goal_pos_name).getPosition()
 
-arm = pickup_object["arm"]
-#test_example["waypoints"][goal_name] = supervisor.getFromDef(goal_name).getPosition()
 
-# Load all devices into RM
-devices = WHEEL_NAMES + LEFT_ARM_NAMES + RIGHT_ARM_NAMES
-resilience_manager = ResilienceManager(devices)
+# ------------------------------
+# Build tau / epsilon / kappa
+# ------------------------------
+task_name = task_type
+goal_name = goal_pos_name
 
-# Load task info into RM
-resilience_manager.load_example(
-    current_task["tau"],
-    current_task["epsilon"],
-    current_task["kappa"],
-    next(iter(current_task["T"])),
-    next(iter(current_task["G"]))
+tau = {}
+epsilon  = {}
+kappa = {}
+
+for comp, val in config["tau"].items():
+    tau[(comp, task_name)] = val
+
+for comp, val in config["epsilon"].items():
+    epsilon[(comp, goal_name)] = val
+
+for comp, val in config["kappa"].items():
+    kappa[(comp)] = val
+
+RM.load_example(
+    tau,
+    epsilon,
+    kappa,
+    task_name,
+    goal_name
 )
 
+# -----------------------------
+# Thresholds (theta & alpha)
+# -----------------------------
+RM.theta_crit = config["thresholds"]["theta_crit"]
+RM.theta_base = config["thresholds"]["theta_base"]
+RM.alpha_crit = config["thresholds"]["alpha_crit"]
+RM.alpha_base = config["thresholds"]["alpha_base"]
 
-# Load IDS with devices from RM --------------------------
-ids = IDS(resilience_manager.D)
+# ----------------------
+# Mitigation
+# ----------------------
+RM.mitigatable_devices = set(config["mitigation"]["enabled_devices"])
 
 
-# Resilience check ---------------------------------------
+# ------------------------
+# Resilience Check
+# ------------------------
 def check_resilience_live():
-    rclpy.spin_once(sub_node, timeout_sec=0.0)
-
-    # apply attack effect
-    attack_executor.update(sub_node.attack_state)
+    # Process ROS 2 attacks
+    rclpy.spin_once(subscriber_node, timeout_sec=0)
+    attack_executor.update(subscriber_node.attack_state)
     attack_executor.apply()
 
     # Update IDS
-    ids.update_attack_state(sub_node.attack_state)
+    #compromised = [a["component"] for a in attack_executor.active_attacks]
+    ids.update_attack_state(subscriber_node.attack_state)
     ids_output = ids.get_probability_output()
 
-    # Update S
-    resilience_manager.update_compromised_set(ids_output)
+    # Update S in RM
+    RM.update_compromised_set(ids_output)
 
     # Check resilience
-    result, neutralized = resilience_manager.check_resilience()
+    result, neutralized = RM.check_resilience()
 
     # Neutralize attack executor
     if neutralized:
         attack_executor.neutralized(neutralized)
 
     # Log transitions
-    resilience_manager.log_state_changes()
+    RM.log_state_changes()
 
-    
     return result
 
-'''
-# Execute current task
-result_navigate = task.navigate_to_goal(
-    supervisor,
-    navigate["waypoints"],
-    goal_name=goal_name,
-    timestep=timestep,
-    resilience_check=check_resilience_live,
-    resilience_manager=resilience_manager,
-    attack_executor=attack_executor
-)
-print(f"Navigate task: {result_navigate}")
+# -------------------------------
+# Execute task
+# -------------------------------
+if task_type == "navigate":
+    result = current_task(
+        supervisor,
+        waypoints,
+        goal_name,
+        timestep,
+        resilience_check=check_resilience_live,
+        resilience_manager=RM,
+        attack_executor=attack_executor
+    )
 
-'''
-'''
-# Execute pickup task
-result_pickup = task.pickup_object(
-    supervisor,
-    object_name=object_name,
-    arm=arm,
-    timestep=timestep,
-    resilience_check=check_resilience_live,
-    resilience_manager=resilience_manager,
-    attack_executor=attack_executor
-)
-print(f"Pick up task: {result_pickup}")
-'''
+elif task_type == "pickup":
+    result = current_task(
+        supervisor,
+        arm,
+        object_name,
+        timestep,
+        resilience_check=check_resilience_live,
+        resilience_manager=RM,
+        attack_executor=attack_executor
+    )
 
-# Execute pickup task
-result_navigate_pickup = task.navigagte_and_pickup_object(
-    supervisor,
-    waypoints=current_task["waypoints"],
-    goal_name=goal_name,
-    arm=arm,
-    object_name=object_name,
-    timestep=timestep,
-    resilience_check=check_resilience_live,
-    resilience_manager=resilience_manager,
-    attack_executor=attack_executor
-)
-print(f"Pick up and navigate task: {result_navigate_pickup}")
+elif task_type == "navigate_and_pickup":
+    result = current_task(
+        supervisor,
+        waypoints,
+        goal_name,
+        arm,
+        object_name,
+        timestep,
+        resilience_check=check_resilience_live,
+        resilience_manager=RM,
+        attack_executor=attack_executor
+    )
 
+print(f"Task result: {result}")
+
+
+# ---------------
 # Webot main loop
+# ---------------
 while supervisor.step(timestep) != -1:
-    rclpy.spin_once(sub_node, timeout_sec=0.0)
-
-sub_node.destroy_node()
-rclpy.shutdown()
-
+    pass

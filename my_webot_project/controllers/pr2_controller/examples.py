@@ -94,10 +94,10 @@ navigagte_and_pickup_object = {
     "G": {"AvoidCollision"},
     "tau": {
         ("left_wheels", "PickupAndDropObject"): 2,
-        ("right_wheels", "PPickupAndDropObject"): 2,
+        ("right_wheels", "PickupAndDropObject"): 2,
         ("left_arm", "PickupAndDropObject"): 2,
         ("left_gripper", "PickupAndDropObject"): 2,
-        ("right_arm", "PPickupAndDropObject"): 1,
+        ("right_arm", "PickupAndDropObject"): 1,
         ("right_gripper", "PickupAndDropObject"): 1,
         ("torso", "PickupAndDropObject"): 0,
         ("head", "PickupAndDropObject"): 0,

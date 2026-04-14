@@ -33,7 +33,7 @@ COMPONENT_MAP = {
         "l_gripper_r_finger_tip_contact_sensor"
     ],
     "right_gripper": [
-        "r_finger_gripper_motor::l_finger",
+        "r_finger_gripper_motor::r_finger",
         "r_gripper_l_finger_tip_contact_sensor",
         "r_gripper_r_finger_tip_contact_sensor",
     ],

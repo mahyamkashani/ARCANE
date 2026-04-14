@@ -1,4 +1,4 @@
-from dispruption_degradation import degradation, disruption 
+from disruption_degradation import degradation, disruption 
 from mitigation_feasability import mitigation_feasability
 from component_mapping import COMPONENT_MAP
 
@@ -12,8 +12,13 @@ class ResilienceManager:
         self.epsilon = {}
         self.current_task = {}
         self.current_goal = {}
+        self.theta_crit = 0.0
+        self.theta_base = 0.0
+        self.alpha_crit = 0.0
+        self.alpha_base = 0.0
 
         self.S = set() # Compromised set 
+        self.mitigatable_devices = set()
         self.active_mitigation = set()
         self.current_resilient = ""
         self.current_attacks = []
@@ -174,7 +179,7 @@ class ResilienceManager:
         # Compute disruption and degradation (without mitigation)
         delta = disruption(self.S, self.tau, self.epsilon, self.current_task, self.current_goal)  
         #print(f"DEBUG disruption: S={self.S}, delta={delta}")
-        gamma = degradation(self.S, self.tau, self.epsilon, self.current_task, self.current_goal)
+        gamma = degradation(self.S, self.tau, self.epsilon, self.current_task, self.current_goal, self.theta_crit, self.theta_base, self.alpha_crit, self.alpha_base)
                 
 
         # System is resilient (without mitigation)
@@ -187,7 +192,7 @@ class ResilienceManager:
             s_effective = self.get_effective_state()
 
             delta_eff = disruption(s_effective, self.tau, self.epsilon,self.current_task, self.current_goal)
-            gamma_eff = degradation(s_effective, self.tau, self.epsilon,self.current_task, self.current_goal)
+            gamma_eff = degradation(s_effective, self.tau, self.epsilon,self.current_task, self.current_goal, self.theta_crit, self.theta_base, self.alpha_crit, self.alpha_base)
 
             if delta_eff == 1 and gamma_eff  == 1:
                 return self.set_resilient(delta_eff, gamma_eff), self.active_mitigation
@@ -196,7 +201,7 @@ class ResilienceManager:
         
         # Try mitigation feasibility if not resilient
         if not self.pending_mitigation:
-            my = mitigation_feasability(self.S, self.tau, self.epsilon, self.current_task, self.current_goal)
+            my = mitigation_feasability(self.S, self.tau, self.epsilon, self.current_task, self.current_goal, self.mitigatable_devices, self.theta_crit, self.theta_base, self.alpha_crit, self.alpha_base)
 
             # If mitigating action exist
             if my["feasible"] == 1:
@@ -235,9 +240,9 @@ class ResilienceManager:
                 critical = self.is_component_critical(comp)
 
                 if critical:
-                    print(f"[RM] ATTACK: {comp} ({attack_type}) → CRITICAL")
+                    print(f"[RM] ATTACK: {comp} ({attack_type}) - CRITICAL")
                 else:
-                    print(f"[RM] ATTACK: {comp} ({attack_type}) → NON-CRITICAL")
+                    print(f"[RM] ATTACK: {comp} ({attack_type}) - NON-CRITICAL")
 
             if not self.current_attacks:
                 print("[RM] No active attacks")
