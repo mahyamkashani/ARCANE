@@ -161,9 +161,9 @@ class ResilienceManager:
     # ''''''''''''''''''''''''
     def check_resilience(self):
 
-        print(f"[RM] S: {self.S}")
-        print(f"[RM] mitigatable: {self.mitigatable_devices}")
-        print(f"[RM] intersection: {self.S & self.mitigatable_devices}")
+        #print(f"[RM] S: {self.S}")
+        #print(f"[RM] mitigatable: {self.mitigatable_devices}")
+        #print(f"[RM] intersection: {self.S & self.mitigatable_devices}")
 
         # No attack
         if not self.S:

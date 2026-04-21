@@ -5,9 +5,7 @@ class IDS:
 
     def __init__(self, D, detection_probability=1.0):
         self.D_low = D # low level representation of devices
-        self.I = {d: 0.0 for d in D}
         self.S = set()
-        #self.detection_probability = detection_probability
 
         self.D_high = {} # high-level representation of devices
         for comp, devices in COMPONENT_MAP.items():
@@ -24,13 +22,13 @@ class IDS:
         self.kappa_crit_set = set()
         self.kappa_base_set = set()
 
+        # Kappa = 1 - detection probability
         self.kappa_crit = 0.0
         self.kappa_base = 0.0
 
-        # Criticality-based detection probability
-        self.detection_probability_crit = 0.9
-        self.detection_probability_base = 0.5
+        self.tested_components = set()
 
+# ------------------------------------------------------------------
     def load_kappa_sets(self, tau, epsilon, current_task, current_goal):
         """Load task/goal specific parameters and build criticality sets"""
         self.tau = tau
@@ -43,10 +41,7 @@ class IDS:
         self.kappa_base_set.clear()
 
         for d in self.D_low:
-            #print(f'Prin från load kappa set {d}')
-
             comp = self.D_high.get(d)
-
             if comp is None:
                 continue
 
@@ -54,63 +49,42 @@ class IDS:
                 self.tau.get((comp, self.current_task), 0) == 2 or
                 self.epsilon.get((comp, self.current_goal), 0) == 2
             )
-            
             if is_critical:
                 self.kappa_crit_set.add(d)
             else:
                 self.kappa_base_set.add(d)
         
-        # Print the criticality sets
-        #print(f"[IDS] kappa_crit_set: {sorted(self.kappa_crit_set)}")
-        #print(f"[IDS] kappa_base_set: {sorted(self.kappa_base_set)}")
-
-
-    # Probability that the IDS detects an ongoing attack
-    def update_attack_state(self, attack_state): 
-        components = {attack["component"] for attack in attack_state}
         
-        compromised_components = set()
+    # Probability that the IDS detects an ongoing attack
+    def update_attack_state(self, attack_state):
+        components = {attack["component"] for attack in attack_state}
+
+        # Clear components who are no longer compromised 
+        for comp in list(self.tested_components):
+            if comp not in components:
+                self.tested_components.discard(comp)
+                # Remove from S
+                for d in COMPONENT_MAP.get(comp, []):
+                    self.S.discard(d)
+
+        # Random confidence that the attack was detected by IDS
         for comp in components:
-            compromised_components.update(COMPONENT_MAP.get(comp, []))
+            if comp in self.tested_components:
+                continue 
 
-        for d in self.D_low:
-            if d in compromised_components:
+            devices = COMPONENT_MAP.get(comp, [])
+            is_critical = any(d in self.kappa_crit_set for d in devices)
+            kappa = self.kappa_crit if is_critical else self.kappa_base
 
-                if d in self.kappa_crit_set:
-                    detected = random.random() < self.detection_probability_crit
-                else:
-                    detected = random.random() < self.detection_probability_base
-                self.I[d] = 1.0 if detected else 0.0 #IDS confidence
-            else:
-                self.I[d] = 0.0
-    
-
-    def get_probability_output(self):
-        return self.I.copy()
-    
-
-    # ''''''''''''''''''''''''''''''''''''''
-    # Compromised devices get added to S
-    # ''''''''''''''''''''''''''''''''''''''
-    # if we look at crit_set compare with kappa_crit ...
-    # return S to controller 
-    def update_compromised_set(self):
-            self.S.clear()
-
-            for d, confidence in self.I.items():
-                if d not in self.D_low:
-                    continue
-            
-                if d in self.kappa_crit_set:
-                    kappa = self.kappa_crit
-                    is_critical = True
-                else:
-                    kappa = self.kappa_base
-                    is_critical = False
-
-                if confidence >= kappa:
+            confidence = random.random()
+            if confidence >= kappa:
+                for d in devices:
                     self.S.add(d)
 
-                #print(f"[IDS] {d} | critical={is_critical} | I={confidence} | kappa={kappa} | in_S={d in self.S}")
+            self.tested_components.add(comp)
 
-       
+    # Called when RM neutralizes a component
+    def clear_device(self, comp):
+            self.tested_components.discard(comp)
+            for d in COMPONENT_MAP.get(comp, []):
+                self.S.discard(d)

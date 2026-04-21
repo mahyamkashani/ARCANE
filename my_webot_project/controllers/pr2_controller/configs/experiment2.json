@@ -1,7 +1,9 @@
 {
   "task": {
-    "type": "navigate_to_goal",
-    "goal": "box2"
+    "type": "navigate_and_pickup",
+    "goal": "table2",
+    "object": "water_bottle",
+    "arm": "left"
   },
 
   "thresholds": {
@@ -15,15 +17,15 @@
   "tau": {
     "left_wheels": 2,
     "right_wheels": 2,
-    "left_arm": 0,
-    "right_arm": 0,
-    "left_gripper": 0,
-    "right_gripper": 0
+    "left_arm": 2,
+    "right_arm": 1,
+    "left_gripper": 2,
+    "right_gripper": 1
   },
 
   "epsilon": {
     "distance_sensor": 2,
-    "camera": 0
+    "camera": 2
   },
 
   "mitigation": {
