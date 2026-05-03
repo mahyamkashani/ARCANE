@@ -44,9 +44,7 @@
 
   "mitigation": {
     "enabled_devices": [
-      "left_arm",
-      "left_wheels",
-      "right_wheels"
+      "left_wheels"
     ]
   }
 }

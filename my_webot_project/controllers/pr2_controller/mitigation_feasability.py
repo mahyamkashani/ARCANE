@@ -7,14 +7,14 @@ def powerset(S):
         for combo in combinations(S, r):
             yield set(combo)
 
-# my returns 0 or 1 if mitigation strategy can be applied
-# Return true if possible, otherwise return false
+# If mitigation is possible: return 1
+# Otherwise: return 0
 def mitigation_feasability(S, tau, epsilon, current_task, current_goal, mitigatable_devices, theta_crit, theta_base, alpha_crit, alpha_base):
 
     # If system is resilient - no mitigation needed
-    if disruption(S, tau, epsilon, current_task, current_goal) == 1 \
-    and degradation(S, tau, epsilon, current_task, current_goal, theta_crit, theta_base, alpha_crit, alpha_base) == 1:
-        return {'feasible': 1, 'neutralized': set()}
+    #if disruption(S, tau, epsilon, current_task, current_goal) == 1 \
+    #and degradation(S, tau, epsilon, current_task, current_goal, theta_crit, theta_base, alpha_crit, alpha_base) == 1:
+    #    return {'feasible': 1, 'neutralized': set()}
 
     # Devices in S that can be mitigated
     mitigatable = S & mitigatable_devices

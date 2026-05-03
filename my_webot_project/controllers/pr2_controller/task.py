@@ -2,7 +2,6 @@ import math
 import pr2_control as pr2
 import obstacle_avoidance as oa
 
-
 def move(supervisor, goal_pos, timestep, resilience_check=None, resilience_manager=None, goal_node=None, attack_executor=None, avoid_obstacles=False):
     robot_pos = supervisor.getSelf().getPosition() # Start position of robot
 

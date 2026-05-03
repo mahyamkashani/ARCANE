@@ -4,6 +4,8 @@ GOAL
 - Reason about {component: attack_type}
 - Apply attacks
 '''
+
+# TODO: add attack on wheels where with different speed 
 from pr2_control import MAX_WHEEL_SPEED, LEFT_FINGER_MOTOR, RIGHT_FINGER_MOTOR # 3.0   
 
 class AttackExecutor:

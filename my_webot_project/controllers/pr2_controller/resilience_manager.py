@@ -48,43 +48,11 @@ class ResilienceManager:
     # '''''''''''''''''''''''''''''''
     # Load example from example.py
     # '''''''''''''''''''''''''''''''
-    def load_example(self, tau, epsilon, kappa, current_task, current_goal):
+    def load_example(self, tau, epsilon, current_task, current_goal):
         self.tau = tau
         self.epsilon = epsilon
-        self.kappa = kappa
         self.current_task = current_task
         self.current_goal = current_goal
-
-    
-    # ''''''''''''''''''''''''''''''''''''''
-    # Compromised devices get added to S
-    # ''''''''''''''''''''''''''''''''''''''
-    '''
-    # low level representation of components
-     def update_compromised_set(self, ids_output: dict):
-        self.S.clear()
-
-        for d, confidence in ids_output.items():
-            if d in self.D and confidence >= self.kappa.get(d, 1.0): 
-                self.S.add(d)
-    '''
-
-    # high level representation of components
-    def update_compromised_set(self, ids_output: dict):
-        compromised_devices = set()
-
-        # 1. samla compromised devices (som nu)
-        for d, confidence in ids_output.items():
-            if d in self.D and confidence >= self.kappa.get(d, 1.0):
-                compromised_devices.add(d)
-
-        # 2. mappa till high-level components
-        self.S.clear()
-        for comp, devices in COMPONENT_MAP.items():
-            if any(d in compromised_devices for d in devices):
-                self.S.add(comp)
-    
-
 
     # '''''''''''''''''''''''''''''''''''''''
     # Compute effective S (after mitigation)
@@ -172,44 +140,43 @@ class ResilienceManager:
         if self.active_mitigation and not self.active_mitigation.issubset(self.S):
             self.reset_mitigation()
 
-        # Mitgation delay
+        # Delay mitigation
         self.tick_mitigation_timer()
         
 
-        # Compute disruption and degradation (without mitigation)
-        delta = disruption(self.S, self.tau, self.epsilon, self.current_task, self.current_goal)  
-        #print(f"DEBUG disruption: S={self.S}, delta={delta}")
-        gamma = degradation(self.S, self.tau, self.epsilon, self.current_task, self.current_goal, self.theta_crit, self.theta_base, self.alpha_crit, self.alpha_base)
-                
+        # Evaluate disruption
+        delta = disruption(self.S, self.tau, self.epsilon, self.current_task, self.current_goal) 
 
-        # System is resilient (without mitigation)
-        if delta == 1 and gamma == 1:
+        # Case 1: Not disrupted -> always resilient
+        if delta == 1: 
             self.reset_mitigation()
             return self.set_resilient(1,1), set()
         
-        # Mitigation is active - evaluate with reduced S
+        # Case 2: Disrupted -> evaluate degradation
+        gamma = degradation(self.S, self.tau, self.epsilon, self.current_task, self.current_goal, self.theta_crit, self.theta_base, self.alpha_crit, self.alpha_base)
+
+        # Active mitigation  
         if self.active_mitigation:
             s_effective = self.get_effective_state()
 
             delta_eff = disruption(s_effective, self.tau, self.epsilon,self.current_task, self.current_goal)
+
+            if delta_eff == 1:
+                return self.set_resilient(1, 1), self.active_mitigation
+
             gamma_eff = degradation(s_effective, self.tau, self.epsilon,self.current_task, self.current_goal, self.theta_crit, self.theta_base, self.alpha_crit, self.alpha_base)
-
-            if delta_eff == 1 and gamma_eff  == 1:
-                return self.set_resilient(delta_eff, gamma_eff), self.active_mitigation
             return self.set_not_resilient(delta_eff, gamma_eff), set()
-
         
-        # Try mitigation feasibility if not resilient
+        # Try mitigation 
         if not self.pending_mitigation:
             my = mitigation_feasability(self.S, self.tau, self.epsilon, self.current_task, self.current_goal, self.mitigatable_devices, self.theta_crit, self.theta_base, self.alpha_crit, self.alpha_base)
 
-            # If mitigating action exist
             if my["feasible"] == 1:
                 self.pending_mitigation = my["neutralized"]
                 self.mitigation_timer = self.mitigation_delay_steps
 
         # No mitigation possible
-        return self.set_not_resilient(delta, gamma), set()
+        return self.set_not_resilient(0, gamma), set()
 
 
 
