@@ -1,7 +1,7 @@
 {
   "task": {
     "type": "navigate_to_goal",
-    "goal_pos": "box2"
+    "goal": "box2"
   },
 
   "baseline_time": 23.3,

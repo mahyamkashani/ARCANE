@@ -117,7 +117,7 @@ def run_simulation(config_path, use_ros=True):
     RM.alpha_crit = config["thresholds"]["alpha_crit"]
     RM.alpha_base = config["thresholds"]["alpha_base"]
     RM.baseline_time = config.get("baseline_time", None)
-    RM.mitigation_delay_steps  = config.get("mitigation_delay_steps", None)
+    RM.mitigation_delay_steps  = config.get("mitigation_delay_steps", 0)
 
     # -----------------------------
     # Information for IDS
@@ -240,11 +240,11 @@ def run_simulation(config_path, use_ros=True):
     if baseline_time:
         slowdown = elapsed_time - baseline_time
         degradation = max(0, slowdown / baseline_time)
+        print(f'Task execution time increased with {slowdown:.1f} seconds')
+        print(f'Degradation: {degradation * 100:.1f}%')
     else:
         degradation = None
-    
-    print(f'Task execution time increased with {slowdown:.1f} seconds')
-    print(f'Degradation: {degradation * 100:.1f}%')
+        print(f'Task execution time: {elapsed_time:.1f} seconds (no baseline configured)')
 
 
     psi = monotonic_degradation(

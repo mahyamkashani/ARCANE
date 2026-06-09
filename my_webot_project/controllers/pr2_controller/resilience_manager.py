@@ -26,7 +26,7 @@ class ResilienceManager:
         self.current_gamma = None
 
         # Delay mitigating action when robot under attack (for simulation purposes)
-        self.mitigation_delay_steps = None
+        self.mitigation_delay_steps = 0
         self.mitigation_timer = 0
         self.pending_mitigation = set()
 

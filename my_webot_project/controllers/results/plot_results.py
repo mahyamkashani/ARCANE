@@ -79,7 +79,7 @@ def plot_multiple_fig():
 # Used for tolerable degradation (that sweep and alpha = [0.1, 0.2, 0.3])
 def plot_one_fig():
     # ===== välj fil =====
-    file = "task1/alpha_crit0.1_theta_crit_sweep.csv"
+    file = "task1/alpha_crit0.3_theta_crit_sweep.csv"
 
     # Läs data
     df = pd.read_csv(file)

@@ -1,6 +1,7 @@
 from disruption_degradation import degradation, disruption
 from itertools import combinations
 
+# definition 8
 # Return all subsets of S
 def powerset(S):
     for r in range(1, len(S) + 1):
