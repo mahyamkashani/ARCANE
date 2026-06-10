@@ -165,12 +165,16 @@ class ResilienceManager:
         delta = disruption(self.S, self.tau, self.epsilon, self.current_task, self.current_goal)
 
         # Axiom 1: delta = 1 => gamma = 1 (no need to compute gamma)
-        if delta == 1:
-            self.reset_mitigation()
-            return self.set_resilient(1, 1), set()
+        # if delta == 1:
+            # self.reset_mitigation()
+        #     return self.set_resilient(1, 1), set()
 
         # delta = 0: now evaluate degradation
         gamma = degradation(self.S, self.tau, self.epsilon, self.current_task, self.current_goal, self.theta_crit, self.theta_base, self.alpha_crit, self.alpha_base)
+
+        if delta == 1 and gamma == 1:
+            self.reset_mitigation()
+            return self.set_resilient(1, 1), set()
 
         # Case: Mitigation active
         if self.active_mitigation:
@@ -178,11 +182,12 @@ class ResilienceManager:
 
             delta_eff = disruption(s_effective, self.tau, self.epsilon, self.current_task, self.current_goal)
 
-            # Axiom 1 on effective state
-            if delta_eff == 1:
-                return self.set_resilient(1, 1), self.active_mitigation
-
+            
             gamma_eff = degradation(s_effective, self.tau, self.epsilon, self.current_task, self.current_goal, self.theta_crit, self.theta_base, self.alpha_crit, self.alpha_base)
+            
+            if delta_eff == 1 and gamma_eff ==1:
+               return self.set_resilient(1, 1), self.active_mitigation
+            
             return self.set_not_resilient(delta_eff, gamma_eff), set()
 
         # Try mitigation
@@ -248,8 +253,8 @@ class ResilienceManager:
             self.prev_delta = self.current_delta
 
             # Axiom 1: delta = 0 -> alltid logga gamma
-            if self.current_delta == 0:
-                self.prev_gamma = None  # tvinga gamma-blocket att trigga
+            # if self.current_delta == 0:
+            #    self.prev_gamma = None  # tvinga gamma-blocket att trigga
 
         # Degradation (loggas alltid när delta = 0 och ändras)
         if self.current_gamma != self.prev_gamma:

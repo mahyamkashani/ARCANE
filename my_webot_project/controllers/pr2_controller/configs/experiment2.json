@@ -34,6 +34,6 @@
   },
 
   "mitigation": {
-    "enabled_devices": []
+    "enabled_devices": ["left_wheels", "right_wheels"]
   }
 }
