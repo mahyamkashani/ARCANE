@@ -1,4 +1,4 @@
-# examensarbete
+# Implementation and Evaluation of CP Embodied System under Device-level Cyberattacks
 
 ## Installation
 
@@ -10,23 +10,30 @@ colcon build --packages-select attack_pkg
 source install/setup.bash
 ```
 
-## Running
+## Execution
 
 Open **3 separate terminals** and run one command in each.
 
-**Terminal 1 — Webots simulation:**
+**Terminal 1: Webots simulation without PR2 controller:**
 ```bash
 cd ~/ros2_ws && source install/setup.bash
-webots ~/MSThesis/GysellaImrell/examensarbete/my_webot_project/worlds/my_project_world.wbt
+webots ~/my_webot_project/worlds/my_project_world.wbt
 ```
 
-**Terminal 2 — Attack node:**
+**Terminal 2: Run PR2 controller using configuration file:**
+```bash
+/usr/local/webots/webots-controller   --robot-name=PR2
+
+python3 ~/my_webot_project/controllers/pr2_controller/pr2_controller.py  ~/my_webot_project/controllers/pr2_controller/configs/experiment2.json
+```
+
+**Terminal 3: Attack node:**
 ```bash
 cd ~/ros2_ws && source install/setup.bash
 ros2 run attack_pkg attack_node
 ```
 
-**Terminal 3 — Trigger an attack:**
+**Terminal 4: Trigger an attack:**
 ```bash
 cd ~/ros2_ws && source install/setup.bash
 ros2 topic pub --once /attack_state my_attack_interfaces/msg/AttackState \
