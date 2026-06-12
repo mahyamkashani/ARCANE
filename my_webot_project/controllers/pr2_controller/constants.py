@@ -1,15 +1,10 @@
 from enum import Enum
 
 
-# ──────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------
 # Enums
-# ──────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------
 class Side(str, Enum):
-    """Robot side / arm selector.
-
-    str-based so `Side.LEFT == "left"` and dict lookups with the raw
-    'left'/'right' strings from the config still resolve.
-    """
     LEFT = "left"
     RIGHT = "right"
 
@@ -23,16 +18,16 @@ class AttackType(str, Enum):
     GRIP_STRONG = "GRIP_STRONG"
 
 
-# ──────────────────────────────────────────────────────────────────────
-# Manual-run defaults (used by manual_run.py)
-# ──────────────────────────────────────────────────────────────────────
-CONFIG = "configs/experiment2.json"
+# ----------------------------------------------------------------------
+# Manual-run defaults
+# ----------------------------------------------------------------------
+CONFIG = "configs/experiment4.json"
 RESULT_FILE = "../results/framework_correctness/exp1.csv"
 
 
-# ──────────────────────────────────────────────────────────────────────
+# ----------------------------------------------------------------------
 # PR2 hardware constants
-# ──────────────────────────────────────────────────────────────────────
+# ----------------------------------------------------------------------
 MAX_WHEEL_SPEED = 4.0         # maximum velocity for the wheels [rad / s]
 WHEELS_DISTANCE = 0.4492      # distance between 2 caster wheels (the four wheels are located in square) [m]
 SUB_WHEELS_DISTANCE = 0.098   # distance between 2 sub wheels of a caster wheel [m]
@@ -80,21 +75,21 @@ LEFT_CONTACT_SENSORS = ["l_gripper_l_finger_tip_contact_sensor", "l_gripper_r_fi
 RIGHT_CONTACT_SENSORS = ["r_gripper_l_finger_tip_contact_sensor", "r_gripper_r_finger_tip_contact_sensor"]
 
 
-# ──────────────────────────────────────────────────────────────────────
+# ----------------------------------------------------------------------
 # Obstacle-avoidance tuning
-# ──────────────────────────────────────────────────────────────────────
+# ----------------------------------------------------------------------
 AVOIDANCE_THRESHOLD = 0.50   # closeness score to start reacting  → ~1.0 m away
 STOP_THRESHOLD      = 0.75   # closeness score on BOTH sides → ~0.5 m away (emergency)
 STRAFE_DISTANCE     = 0.5    # metres to strafe sideways per avoidance step
-STEP_DISTANCE       = 0.35   # metres per forward micro-step
+STEP_DISTANCE       = 0.5   # metres per forward micro-step
 GOAL_TOLERANCE      = 0.30   # metres — stop when this close to goal
 HEADING_TOLERANCE   = 0.10   # radians — skip re-orient if error is small
 NEAR_GOAL_ZONE      = 1.2    # metres — disable avoidance inside this radius around goal
 
 
-# ──────────────────────────────────────────────────────────────────────
-# Component mapping: low-level robot devices → high-level functional groups
-# ──────────────────────────────────────────────────────────────────────
+# ----------------------------------------------------------------------
+# Component mapping: low-level robot devices to high-level functional groups
+# ----------------------------------------------------------------------
 COMPONENT_MAP = {
     "left_wheels": [
         "fl_caster_l_wheel_joint",

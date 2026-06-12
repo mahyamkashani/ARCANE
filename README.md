@@ -22,7 +22,7 @@ webots ~/my_webot_project/worlds/my_project_world.wbt
 
 **Terminal 2: Run PR2 controller using JSON configuration file:**
 ```bash
-python3 ~/my_webot_project/controllers/pr2_controller/manual_run.py
+python3 ~/my_webot_project/controllers/manual_run.py
 ```
 or
 ```bash
@@ -56,4 +56,17 @@ ros2 topic pub --once /attack_state my_attack_interfaces/msg/AttackState \
 | `left_gripper`, `right_gripper` | `STOP`, `OVERSPEED`, `UNDERSPEED`, `BACKWARD`, `GRIP_WEAK` |
 | `torso`, `head` | `STOP`, `OVERSPEED`, `UNDERSPEED`, `BACKWARD` |
 
-T
+## Testing
+
+Unit tests live in `my_webot_project/controllers/tests/tests.py` and cover the
+degradation metric (`metrics.Metrics.compute_degradation`), including the
+edge cases where task execution time is negative (a task finishing faster than
+its baseline, or halting before completion).
+
+Run them with `pytest` from the `tests` directory:
+
+```bash
+cd ~/my_webot_project/controllers/tests
+pytest tests.py -v
+```
+

@@ -48,7 +48,7 @@ def navigate_with_avoidance(supervisor, goal_pos, timestep, ds_left, ds_right,
                              resilience_manager=None, attack_executor=None):
 
     while True:
-        # ── Goal reached? ──────────────────────────────────────────────
+        #  Reaching Goal
         if _dist_to_goal(supervisor, goal_pos) < GOAL_TOLERANCE:
             pr2.stop_wheels(supervisor)
             return "DONE"
@@ -57,7 +57,7 @@ def navigate_with_avoidance(supervisor, goal_pos, timestep, ds_left, ds_right,
             pr2.stop_wheels(supervisor)
             return "DONE"
 
-        # ── Resilience check ───────────────────────────────────────────
+        #  Resilience check 
         if resilience_check:
             if not resilience_check():
                 if not (resilience_manager and resilience_manager.pending_mitigation) and \
@@ -65,7 +65,7 @@ def navigate_with_avoidance(supervisor, goal_pos, timestep, ds_left, ds_right,
                     pr2.stop_wheels(supervisor)
                     return "HALTED"
 
-        # ── Read sensors (skip avoidance near goal to avoid treating it as obstacle) ──
+        # Read sensors (skip avoidance near goal to avoid treating it as obstacle) 
         dist_to_goal = _dist_to_goal(supervisor, goal_pos)
         left_close, right_close = _read(ds_left, ds_right)
 
@@ -73,7 +73,7 @@ def navigate_with_avoidance(supervisor, goal_pos, timestep, ds_left, ds_right,
             left_close, right_close = 0.0, 0.0
 
         if left_close > STOP_THRESHOLD and right_close > STOP_THRESHOLD:
-            # Imminent collision on both sides: back up, then strafe toward clearer side
+            # Checking collision on both sides: back up, then strafe toward clearer side
             pr2.stop_wheels(supervisor)
             pr2.robot_go_forward(supervisor, -0.3, timestep)
             strafe = STRAFE_DISTANCE if right_close >= left_close else -STRAFE_DISTANCE

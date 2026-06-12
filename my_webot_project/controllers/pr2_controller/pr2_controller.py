@@ -17,6 +17,7 @@ from constants import AttackType
 from attack_executor import AttackExecutor
 from component_mapping import COMPONENT_MAP, map_to_high_level
 from disruption_degradation import monotonic_degradation
+from metrics import Metrics
 
 try:
     from ros2_subscriber import SubscriberNode
@@ -236,17 +237,14 @@ def run_simulation(config_path, use_ros=True):
 
 
     baseline_time = config.get("baseline_time", None)
+    degradation, slowdown = Metrics().compute_degradation(result, elapsed_time, baseline_time)
 
-    if result != "Done": # HALTED
-        degradation = None
+    if result != "DONE": # HALTED
         print(f"Task {result} after {elapsed_time:.1f}s did not complete")
     elif baseline_time:
-        slowdown = elapsed_time - baseline_time
-        degradation = max(0, slowdown / baseline_time)
         print(f'Task execution time increased with {slowdown:.1f} seconds')
         print(f'Degradation: {degradation * 100:.1f}%')
     else:
-        degradation = None
         print(f'Task execution time: {elapsed_time:.1f} seconds (no baseline configured)')
 
 

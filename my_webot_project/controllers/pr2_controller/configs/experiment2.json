@@ -8,7 +8,7 @@
   
   "baseline_time": 48.9,
 
-  "obstacle_avoidance": false,
+  "obstacle_avoidance": true,
 
   "mitigation_delay_steps": 100,
 
