@@ -119,6 +119,7 @@ def run_simulation(config_path, use_ros=True):
     RM.alpha_base = config["thresholds"]["alpha_base"]
     RM.baseline_time = config.get("baseline_time", None)
     RM.mitigation_delay_steps  = config.get("mitigation_delay_steps", 0)
+    RM.event_log_path = config.get("event_log", None)  # set in config to log the attack→mitigation flow to CSV
 
     # -----------------------------
     # Information for IDS
@@ -183,7 +184,7 @@ def run_simulation(config_path, use_ros=True):
                 ids.clear_device(comp)
 
         # Log transitions
-        RM.log_state_changes()
+        RM.log_state_changes(supervisor.getTime())
         return result
 
     # -------------------------------
@@ -242,7 +243,10 @@ def run_simulation(config_path, use_ros=True):
     if result != "DONE": # HALTED
         print(f"Task {result} after {elapsed_time:.1f}s did not complete")
     elif baseline_time:
-        print(f'Task execution time increased with {slowdown:.1f} seconds')
+        if slowdown >= 0:
+            print(f'Task execution time increased with {slowdown:.1f} seconds')
+        else:
+            print(f'Task finished {abs(slowdown):.1f} seconds faster than baseline')
         print(f'Degradation: {degradation * 100:.1f}%')
     else:
         print(f'Task execution time: {elapsed_time:.1f} seconds (no baseline configured)')

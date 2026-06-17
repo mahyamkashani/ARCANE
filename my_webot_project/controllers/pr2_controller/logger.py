@@ -3,6 +3,16 @@ import os
 
 #FILE_PATH = "results.csv"
 
+
+def log_event(file_path, row):
+    file_exists = os.path.isfile(file_path)
+    with open(file_path, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=list(row.keys()))
+        if not file_exists:
+            writer.writeheader()
+        writer.writerow(row)
+
+
 def log_result(file_path, output):
 
     file_exists = os.path.isfile(file_path)
@@ -25,7 +35,9 @@ def log_result(file_path, output):
                 #"time",
                 #"degradation",
                 "theta_base",
+                #"thera_crit",
                 "alpha_base",
+                #"alpha_crit",
                 "psi"
 
             ])
@@ -39,6 +51,8 @@ def log_result(file_path, output):
             #time,
             #degradation_percent,
             output["theta_base"],
+            #output["theta_crit"],
             output["alpha_base"],
+            #output["alpha_crit"],
             output["psi"]
         ])

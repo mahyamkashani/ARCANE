@@ -44,7 +44,7 @@ ros2 topic pub --once /attack_state my_attack_interfaces/msg/AttackState \
 
 **Terminal 5: Stop all attacks:**
 ```bash
-ros2 topic pub --once /attack_state my_attack_interfaces/msg/AttackState \
+ros2 topic pub --once /active_attacks my_attack_interfaces/msg/AttackState \
   "{compromised_devices: []}"
 ```
 ### Available Attacks

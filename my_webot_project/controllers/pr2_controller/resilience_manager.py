@@ -1,6 +1,7 @@
 from disruption_degradation import degradation, disruption, monotonic_degradation
 from mitigation_feasability import mitigation_feasability
 from component_mapping import COMPONENT_MAP
+from logger import log_event
 
 class ResilienceManager:
 
@@ -44,6 +45,10 @@ class ResilienceManager:
         self.prev_pending_mitigation = set()
         self.prev_no_mitigation_possible = False
         self.prev_attacks = []
+
+        # Live event logging (CSV). Stays disabled unless event_log_path is set.
+        self.event_log_path = None
+        self.step = 0
 
 
     # '''''''''''''''''''''''''''''''
@@ -219,7 +224,9 @@ class ResilienceManager:
     # ''''''''''''''''''''''''
     # Log state transistions
     # ''''''''''''''''''''''''
-    def log_state_changes(self):
+    def log_state_changes(self, current_time=None):
+
+        changed = False  # set True by any transition below -> triggers a CSV row
 
         # High-level attack logging
         if self.current_attacks != self.prev_attacks:
@@ -232,17 +239,20 @@ class ResilienceManager:
                 else:
                     print(f"ATTACK: {comp} ({attack_type}) - NON-CRITICAL")
             self.prev_attacks = list(self.current_attacks)
+            changed = True
 
         # Active mitigation
         if self.active_mitigation != self.prev_mitigation:
             if self.active_mitigation:
                 print(f"[RM] Active mitigation neutralizing: {self.active_mitigation}")
             self.prev_mitigation = self.active_mitigation.copy()
+            changed = True
 
         # Compromised set
         if self.S != self.prev_S:
             print(f"[RM] Compromised set S updated: {self.S}")
             self.prev_S = self.S.copy()
+            changed = True
 
         # Disruption
         if self.current_delta != self.prev_delta:
@@ -251,6 +261,7 @@ class ResilienceManager:
             else:
                 print("[RM] System not disrupted → δ = 1")
             self.prev_delta = self.current_delta
+            changed = True
 
             # Axiom 1: delta = 0 -> alltid logga gamma
             # if self.current_delta == 0:
@@ -272,17 +283,20 @@ class ResilienceManager:
             else:
                 print("[RM] Degradation within tolerance → γ = 1")
             self.prev_gamma = self.current_gamma
+            changed = True
 
         # Resilience state
         if self.current_resilient != self.prev_resilient:
             print(f"[RM] Resilience state: {self.current_resilient}")
             self.prev_resilient = self.current_resilient
+            changed = True
 
         # Pending mitigation
         if self.pending_mitigation != self.prev_pending_mitigation:
             if self.pending_mitigation:
                 print("[RM] Mitigation pending")
             self.prev_pending_mitigation = self.pending_mitigation.copy()
+            changed = True
 
         # No mitigation possible
         if self.current_resilient == "NOT RESILIENT" \
@@ -291,5 +305,37 @@ class ResilienceManager:
             if not self.prev_no_mitigation_possible:
                 print("[RM] No mitigation possible - system irreparably compromised")
                 self.prev_no_mitigation_possible = True
+                changed = True
         else:
             self.prev_no_mitigation_possible = False
+
+        # Append a CSV row capturing the attack -> mitigation -> resilience flow
+        if changed and self.event_log_path:
+            self._log_event_row(current_time)
+
+    # ''''''''''''''''''''''''''''''''''''''''
+    # Append one snapshot row to the event CSV
+    # ''''''''''''''''''''''''''''''''''''''''
+    def _log_event_row(self, current_time):
+        self.step += 1
+        psi = monotonic_degradation(
+            self.S, self.tau, self.epsilon,
+            self.current_task, self.current_goal,
+            self.alpha_crit, self.alpha_base,
+        )
+
+        def fmt_set(s):
+            return "{" + ",".join(sorted(s)) + "}"
+
+        log_event(self.event_log_path, {
+            "time": round(current_time, 2) if current_time is not None else "",
+            "step": self.step,
+            "attacks": ";".join(f'{a["component"]}:{a["type"]}' for a in self.current_attacks),
+            "S": fmt_set(self.S),
+            "delta": self.current_delta,
+            "gamma": self.current_gamma,
+            "psi": round(psi, 3),
+            "resilient": self.current_resilient,
+            "pending_mitigation": fmt_set(self.pending_mitigation),
+            "active_mitigation": fmt_set(self.active_mitigation),
+        })

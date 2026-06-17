@@ -21,7 +21,7 @@ class AttackType(str, Enum):
 # ----------------------------------------------------------------------
 # Manual-run defaults
 # ----------------------------------------------------------------------
-CONFIG = "configs/experiment4.json"
+CONFIG = "configs/experiment2.json"
 RESULT_FILE = "../results/framework_correctness/exp1.csv"
 
 

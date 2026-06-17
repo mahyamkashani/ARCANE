@@ -6,16 +6,16 @@
     "arm": "left"
   },
   
-  "baseline_time": 48.9,
+  "baseline_time": 48.8,
 
-  "obstacle_avoidance": true,
+  "obstacle_avoidance": false,
 
   "mitigation_delay_steps": 100,
 
   "thresholds": {
-    "theta_crit": 0.9,
+    "theta_crit": 0.95,
     "theta_base": 0.75,
-    "alpha_crit": 0.2,
+    "alpha_crit": 0.1,
     "alpha_base": 0.05,
     "kappa_crit": 0.0,
     "kappa_base": 0.0

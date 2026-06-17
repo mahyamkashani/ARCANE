@@ -5,9 +5,11 @@
     "object": "water_bottle",
     "arm": "left"
   },
+  
+  "baseline_time": 48.9,
 
   "thresholds": {
-    "theta_crit": 0.5,
+    "theta_crit": 0.9,
     "theta_base": 0.75,
     "alpha_crit": 0.4,
     "alpha_base": 0.05,
@@ -15,11 +17,11 @@
     "kappa_base": 0.6
   },
   "tau": {
-    "left_wheels": 0,
+    "left_wheels": 2,
     "right_wheels": 0,
-    "left_arm": 2,
+    "left_arm": 0,
     "right_arm": 0,
-    "left_gripper": 2,
+    "left_gripper": 0,
     "right_gripper": 0
   },
 
