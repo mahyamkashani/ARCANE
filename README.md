@@ -1,4 +1,4 @@
-# Implementation and Evaluation of CP Embodied System under Device-level Cyberattacks
+# Implementation and Evaluation of Cyber-Physical Embodied System under Device-level Cyberattacks
 
 ## Installation
 
@@ -56,12 +56,49 @@ ros2 topic pub --once /active_attacks my_attack_interfaces/msg/AttackState \
 | `left_gripper`, `right_gripper` | `STOP`, `OVERSPEED`, `UNDERSPEED`, `BACKWARD`, `GRIP_WEAK` |
 | `torso`, `head` | `STOP`, `OVERSPEED`, `UNDERSPEED`, `BACKWARD` |
 
+### Automated Execution
+
+Instead of the manual multi-terminal flow above, `run_scenario.sh` automates a full
+run: it launches Webots, starts the PR2 controller after a delay, injects an attack,
+waits for the experiment to finish, records the result CSV, and shuts Webots down.
+
+```bash
+cd ~/ros2_ws && source install/setup.bash   # ensure ROS 2 is sourced
+./run_scenario.sh [config] [attack] [result]
+```
+
+All arguments are optional and have defaults (experiment2 + `left_gripper:GRIP_WEAK`):
+
+```bash
+# Defaults
+./run_scenario.sh
+
+# A specific experiment + non-resilient attack
+./run_scenario.sh configs/experiment2.json "left_arm:STOP" ../results/framework_correctness/exp2.csv
+
+# Multiple compromised devices
+./run_scenario.sh configs/experiment4.json "left_wheels:STOP,right_wheels:STOP"
+```
+
+Launch timing is configurable via the `DELAY` (controller start) and `DELAY2`
+(attack injection) environment variables, in seconds:
+
+```bash
+DELAY=8 DELAY2=15 ./run_scenario.sh configs/experiment2.json "left_arm:STOP"
+```
+
+To collect all results in one go:
+
+```bash
+for n in 1 2 4; do
+  ./run_scenario.sh "configs/experiment$n.json" "left_arm:STOP" "../results/framework_correctness/exp$n.csv"
+done
+```
+
 ## Testing
 
-Unit tests live in `my_webot_project/controllers/tests/tests.py` and cover the
-degradation metric (`metrics.Metrics.compute_degradation`), including the
-edge cases where task execution time is negative (a task finishing faster than
-its baseline, or halting before completion).
+Unit tests live in `my_webot_project/controllers/tests/tests.py` and cover the degradation metric (`metrics.Metrics.compute_degradation`), including the
+edge cases where task execution time is negative (a task finishing faster than its baseline, or halting before completion).
 
 Run them with `pytest` from the `tests` directory:
 
