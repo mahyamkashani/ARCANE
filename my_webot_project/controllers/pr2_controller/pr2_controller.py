@@ -16,7 +16,7 @@ import task
 from constants import AttackType
 from attack_executor import AttackExecutor
 from component_mapping import COMPONENT_MAP, map_to_high_level
-from disruption_degradation import monotonic_degradation
+from disruption_degradation import monotonic_degradation, exponential_degradation
 from metrics import Metrics
 from logger import log_psi
 
@@ -133,6 +133,12 @@ def run_simulation(config_path, use_ros=True, psi_log_path=None):
     ids.current_goal = goal_name
     ids.detection_delay_steps = config.get("detection_delay_steps", 0)
 
+    # -----------------------------
+    # Degradation function selection
+    # -----------------------------
+    degradation_mode = config.get("degradation_mode", "monotonic")
+    RM.psi_fn = exponential_degradation if degradation_mode == "exponential" else monotonic_degradation
+
     # ----------------------
     # Mitigation
     # ----------------------
@@ -195,7 +201,7 @@ def run_simulation(config_path, use_ros=True, psi_log_path=None):
             current_tick = round(supervisor.getTime() * 100)
             if current_tick != _last_psi_second[0]:
                 _last_psi_second[0] = current_tick
-                psi_now = monotonic_degradation(
+                psi_now = RM.psi_fn(
                     RM.S, RM.tau, RM.epsilon,
                     RM.current_task, RM.current_goal,
                     RM.alpha_crit, RM.alpha_base,
@@ -269,7 +275,7 @@ def run_simulation(config_path, use_ros=True, psi_log_path=None):
         print(f'Task execution time: {elapsed_time:.1f} seconds (no baseline configured)')
 
 
-    psi = monotonic_degradation(
+    psi = RM.psi_fn(
         RM.S,
         RM.tau,
         RM.epsilon,

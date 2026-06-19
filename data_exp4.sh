@@ -1,8 +1,5 @@
 #!/bin/bash
 #
-# In this run file: we launch Webots + the IDS/resilience framework, inject
-# multiple attacks at scheduled delays, and record the experiment result CSV.
-#
 # Usage:
 #   ./data_phi_function.sh [config] [attack1] [result]
 #
@@ -37,7 +34,7 @@ ATTACK5="${6:-right_arm:STOP}"
 
 RESULT="${2:-../results/framework_correctness/exp4.csv}"
 
-# Build an AttackState YAML list from a comma-separated "device:type" string.
+# attackState: comma-separated "device:type"
 _make_yaml() {
   local attack="$1"
   local devs yaml
@@ -92,7 +89,6 @@ SIM_PID=$!
   ros2 topic pub --once /active_attacks my_attack_interfaces/msg/AttackState \
     "{compromised_devices: $_yaml5}" ) &
 
-# --- wait for the experiment to finish, then shut Webots down ----------------
 wait "$SIM_PID"
 echo "Experiment finished; results written to $RESULT"
 

@@ -1,14 +1,3 @@
-"""
-Side-by-side view of psi theory and the recorded psi timeline from exp2_psi.csv.
-
-LEFT  -- psi(|S|): the monotonic non-increasing degradation function (Def. 7),
-         drawn as a family of curves psi = max(0, 1 - k * alpha_crit) for
-         several alpha_crit values. The alpha_crit used in experiment2 is bold.
-
-RIGHT -- psi(t) recorded from exp2_psi.csv: the actual psi sampled once per
-         simulation second. Threshold lines and tolerable / not-tolerable bands
-         use the values from experiment2.json.
-"""
 import csv
 import sys
 from pathlib import Path
@@ -18,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from pr2_controller.disruption_degradation import monotonic_degradation
+from pr2_controller.disruption_degradation import monotonic_degradation, exponential_degradation
 
 # ---- experiment2.json thresholds ----------------------------------------
 THETA_CRIT = 0.99
@@ -26,17 +15,20 @@ THETA_BASE = 0.75
 ALPHA_CRIT = 0.4
 ALPHA_BASE = 0.05
 
+# ---- psi function selection ---------------------------------------------
+PSI_FN      = exponential_degradation #monotonic_degradation
+
 # ---- psi-family parameters ----------------------------------------------
-ALPHA_CRITS = [0.3, 0.4, 0.5, 0.6]
+ALPHA_CRITS = [0.2, 0.3, 0.4, 0.5]
 N_MAX       = 5
 TASK        = "task"
 GOAL        = "goal"
 
 # ---- file paths ---------------------------------------------------------
 HERE     = Path(__file__).resolve().parent
-CSV_PATH = HERE / "framework_correctness" / "exp6_psi.csv"
-PSI_OUT  = str(HERE / "exp6_psi_monotonic.pdf")
-PHI_OUT  = str(HERE / "exp6_psi_timeline.pdf")
+CSV_PATH = HERE / "framework_correctness" / "exp7_psi.csv"
+PSI_OUT  = str(HERE / "exp7_psi_monotonic.pdf")
+PHI_OUT  = str(HERE / "exp7_psi_timeline.pdf")
 
 
 def load_psi_csv(path):
@@ -52,7 +44,7 @@ def psi_k(k, alpha_crit):
     S, tau = set(), {}
     for i in range(k):
         d = f"c{i}"; S.add(d); tau[(d, TASK)] = 2
-    return monotonic_degradation(S, tau, {}, TASK, GOAL, alpha_crit, ALPHA_BASE)
+    return PSI_FN(S, tau, {}, TASK, GOAL, alpha_crit, ALPHA_BASE)
 
 
 def plot_psi_family():

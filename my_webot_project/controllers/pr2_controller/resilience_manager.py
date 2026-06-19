@@ -1,4 +1,4 @@
-from disruption_degradation import degradation, disruption, monotonic_degradation
+from disruption_degradation import degradation, disruption, monotonic_degradation, exponential_degradation
 from mitigation_feasability import mitigation_feasability
 from component_mapping import COMPONENT_MAP
 from logger import log_event
@@ -45,6 +45,8 @@ class ResilienceManager:
         self.prev_pending_mitigation = set()
         self.prev_no_mitigation_possible = False
         self.prev_attacks = []
+
+        self.psi_fn = monotonic_degradation
 
         # Live event logging (CSV). Stays disabled unless event_log_path is set.
         self.event_log_path = None
@@ -178,7 +180,7 @@ class ResilienceManager:
         #     return self.set_resilient(1, 1), set()
 
         # delta = 0: now evaluate degradation
-        gamma = degradation(self.S, self.tau, self.epsilon, self.current_task, self.current_goal, self.theta_crit, self.theta_base, self.alpha_crit, self.alpha_base)
+        gamma = degradation(self.S, self.tau, self.epsilon, self.current_task, self.current_goal, self.theta_crit, self.theta_base, self.alpha_crit, self.alpha_base, psi_fn=self.psi_fn)
 
         if delta == 1 and gamma == 1:
             self.reset_mitigation()
@@ -190,17 +192,16 @@ class ResilienceManager:
 
             delta_eff = disruption(s_effective, self.tau, self.epsilon, self.current_task, self.current_goal)
 
-            
-            gamma_eff = degradation(s_effective, self.tau, self.epsilon, self.current_task, self.current_goal, self.theta_crit, self.theta_base, self.alpha_crit, self.alpha_base)
-            
-            if delta_eff == 1 and gamma_eff ==1:
-              return self.set_resilient(1, 1), self.active_mitigation
-            
+            gamma_eff = degradation(s_effective, self.tau, self.epsilon, self.current_task, self.current_goal, self.theta_crit, self.theta_base, self.alpha_crit, self.alpha_base, psi_fn=self.psi_fn)
+
+            if delta_eff == 1 and gamma_eff == 1:
+                return self.set_resilient(1, 1), self.active_mitigation
+
             return self.set_not_resilient(delta_eff, gamma_eff), set()
 
         # Try mitigation
         if not self.pending_mitigation:
-            my = mitigation_feasability(self.S, self.tau, self.epsilon, self.current_task, self.current_goal, self.mitigatable_devices, self.theta_crit, self.theta_base, self.alpha_crit, self.alpha_base)
+            my = mitigation_feasability(self.S, self.tau, self.epsilon, self.current_task, self.current_goal, self.mitigatable_devices, self.theta_crit, self.theta_base, self.alpha_crit, self.alpha_base, psi_fn=self.psi_fn)
 
             if my["feasible"] == 1:
                 self.pending_mitigation = my["neutralized"]
@@ -273,7 +274,7 @@ class ResilienceManager:
         # Degradation (loggas alltid när delta = 0 och ändras)
         if self.current_gamma != self.prev_gamma:
             if self.current_gamma == 0:
-                self.psi = monotonic_degradation(
+                self.psi = self.psi_fn(
                     self.S,
                     self.tau,
                     self.epsilon,
@@ -321,7 +322,7 @@ class ResilienceManager:
     # ''''''''''''''''''''''''''''''''''''''''
     def _log_event_row(self, current_time):
         self.step += 1
-        psi = monotonic_degradation(
+        psi = self.psi_fn(
             self.S, self.tau, self.epsilon,
             self.current_task, self.current_goal,
             self.alpha_crit, self.alpha_base,

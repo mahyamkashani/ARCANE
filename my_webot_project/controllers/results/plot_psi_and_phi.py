@@ -1,22 +1,3 @@
-"""
-Side-by-side view of psi and phi.
-
-LEFT  -- psi(|S|): the monotonic non-increasing degradation function (Def. 7),
-         drawn as a FAMILY of curves psi = max(0, 1 - k * alpha_crit) for several
-         alpha_crit values (same style as plot_monotonic_degradation.py). The
-         alpha_crit used by phi on the right is drawn bold.
-
-RIGHT -- phi[n] = psi(S(t_n)) SAMPLED ON A FIXED CLOCK (t_n = 0, DT, 2*DT, ...)
-         across a long run of N_CHANGES attack/mitigation events. At each tick
-         phi moves toward the current target psi(|S|) by one discrete
-         exponential step:
-
-             phi[n] = phi[n-1]*a + psi(|S_n|)*(1 - a),   a = e^{-lambda*DT}
-
-         lambda = LAMBDA_DEC when the target is below phi (attack, fast),
-         lambda = LAMBDA_INC when it is above (mitigation, slow). The grey step
-         (right axis) is |S(t)|, the number of compromised devices driving phi.
-"""
 import sys
 from pathlib import Path
 

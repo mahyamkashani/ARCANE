@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import matplotlib
 matplotlib.use("Agg")  # headless: write a PNG without needing a display
 import matplotlib.pyplot as plt
-from pr2_controller.disruption_degradation import monotonic_degradation
+from pr2_controller.disruption_degradation import monotonic_degradation, exponential_degradation
 
 TASK = "task"
 GOAL = "goal"
@@ -16,12 +16,15 @@ DEVICE_COUNTS = [1, 2, 3, 4, 5]
 ALPHA_CRITS = [0.1, 0.2, 0.3, 0.4]
 OUT_FILE = "monotonic_degradation.png"
 
+PSI_FN = monotonic_degradation # exponential_degradation 
+
+
 
 def psi_for_k_devices(k, alpha_crit):
     S = {f"d{i}" for i in range(k)}
     tau = {(d, TASK): 2 for d in S}  # level 2 => critical
     epsilon = {}
-    return monotonic_degradation(S, tau, epsilon, TASK, GOAL, alpha_crit, ALPHA_BASE)
+    return PSI_FN(S, tau, epsilon, TASK, GOAL, alpha_crit, ALPHA_BASE)
 
 
 def main():
