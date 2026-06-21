@@ -10,11 +10,11 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from pr2_controller.disruption_degradation import monotonic_degradation, exponential_degradation
 
-# ---- experiment2.json thresholds ----------------------------------------
-THETA_CRIT = 0.99
-THETA_BASE = 0.75
-ALPHA_CRIT = 0.4
-ALPHA_BASE = 0.05
+# ---- experiment json thresholds ----------------------------------------
+THETA_CRIT = 0.8
+THETA_BASE = 0.5
+ALPHA_CRIT = 0.04
+ALPHA_BASE = 0.02
 
 # ---- psi function selection ---------------------------------------------
 PSI_FN      = exponential_degradation #monotonic_degradation
@@ -27,11 +27,11 @@ GOAL        = "goal"
 
 # ---- file paths ---------------------------------------------------------
 HERE     = Path(__file__).resolve().parent
-CSV_PATH       = HERE / "framework_correctness" / "exp7_psi.csv"
-DELTA_CSV_PATH = HERE / "framework_correctness" / "exp7_delta.csv"
-PSI_OUT        = str(HERE / "exp7_psi_monotonic.pdf")
-PHI_OUT        = str(HERE / "exp7_psi_timeline.pdf")
-DELTA_OUT      = str(HERE / "exp7_delta_timeline.pdf")
+CSV_PATH       = HERE / "framework_correctness" / "exp11_psi.csv"
+DELTA_CSV_PATH = HERE / "framework_correctness" / "exp11_delta.csv"
+PSI_OUT        = str(HERE / "exp11_psi_monotonic.pdf")
+PHI_OUT        = str(HERE / "exp11_psi_timeline.pdf")
+DELTA_OUT      = str(HERE / "exp11_delta_timeline.pdf")
 
 
 def load_psi_csv(path):

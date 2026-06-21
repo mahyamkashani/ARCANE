@@ -15,6 +15,7 @@ from constants import (
     RIGHT_FINGER_MOTOR,
     LEFT_CONTACT_SENSORS,
     RIGHT_CONTACT_SENSORS,
+    COMPONENT_MAP,
 )
 
 _gripper_max_torque = {Side.LEFT: None, Side.RIGHT: None}
@@ -84,17 +85,16 @@ def set_rotation_wheels_angles(supervisor, fl, fr, bl, br, timestep, wait_on_fee
 # Apply wheel speed based on resilinece state
 # '''''''''''''''''''''''''''''''''''''''''''
 def apply_wheel_speeds(supervisor, max_wheel_speed, resilience_manager):
-
     if resilience_manager:
         effective_state = resilience_manager.get_effective_state()
+        # Expand high-level device names to low-level motor names
+        stopped_motors = set()
+        for device in effective_state:
+            stopped_motors.update(COMPONENT_MAP.get(device, []))
         for name in WHEEL_NAMES:
-            #print(name)
             motor = supervisor.getDevice(name)
             motor.setPosition(float('inf'))
-            if name in effective_state:
-                motor.setVelocity(0.0)
-            else:
-                motor.setVelocity(max_wheel_speed)
+            motor.setVelocity(0.0 if name in stopped_motors else max_wheel_speed)
     else:
         set_wheels_speed(supervisor, max_wheel_speed)
 
@@ -254,7 +254,7 @@ def robot_go_forward(supervisor, distance, timestep, resilience_check=None, resi
             max_wheel_speed = 0.1 * max_wheel_speed
             braking = True
 
-        if not (attack_executor and attack_executor.has_active_attacks()):
+        if not (attack_executor and attack_executor.has_active_wheel_attacks()):
             apply_wheel_speeds(supervisor, max_wheel_speed, resilience_manager)
 
     stop_wheels(supervisor)
@@ -262,7 +262,7 @@ def robot_go_forward(supervisor, distance, timestep, resilience_check=None, resi
 
 
 # Set the right/left arm position (forward kinematics)
-def set_arm_position(supervisor, arm, shoulder_roll, shoulder_lift, upper_arm_roll, elbow_lift, wrist_roll, timestep, wait_on_feedback=True, speed=0.3, resilience_manager=None):
+def set_arm_position(supervisor, arm, shoulder_roll, shoulder_lift, upper_arm_roll, elbow_lift, wrist_roll, timestep, wait_on_feedback=True, speed=0.3, resilience_manager=None, resilience_check=None):
     names = LEFT_ARM_NAMES if arm == Side.LEFT else RIGHT_ARM_NAMES
     targets = [shoulder_roll, shoulder_lift, upper_arm_roll, elbow_lift, wrist_roll]
 
@@ -277,10 +277,15 @@ def set_arm_position(supervisor, arm, shoulder_roll, shoulder_lift, upper_arm_ro
             sensor.enable(timestep)
 
         while supervisor.step(timestep) != -1:
-            if resilience_manager and resilience_manager.tick_halt_timer(
-                supervisor.getTime(), resilience_manager.start_time
-            ):
-                return "HALTED"
+            # SIL step: run the full resilience check every tick so IDS updates,
+            # attacks are processed and neutralized, and the halt timer fires.
+            if resilience_check:
+                resilient = resilience_check()
+                if not resilient:
+                    if resilience_manager and resilience_manager.tick_halt_timer(
+                        supervisor.getTime(), resilience_manager.start_time
+                    ):
+                        return "HALTED"
             if all(almost_equal(sensors[i].getValue(), targets[i]) for i in range(5)):
                 break
 
@@ -289,7 +294,7 @@ def set_arm_position(supervisor, arm, shoulder_roll, shoulder_lift, upper_arm_ro
 # Open or close the gripper.
 # If wait_on_feedback is true, the gripper is stopped either when the target is reached,
 # or either when something has been gripped
-def set_gripper(supervisor, arm, open, torque_when_gripping, timestep, wait_on_feedback=True, speed=0.2, resilience_manager=None):
+def set_gripper(supervisor, arm, open, torque_when_gripping, timestep, wait_on_feedback=True, speed=0.2, resilience_manager=None, resilience_check=None):
     global _gripper_max_torque
 
     side         = Side(arm)
@@ -316,10 +321,13 @@ def set_gripper(supervisor, arm, open, torque_when_gripping, timestep, wait_on_f
         motor.setPosition(target)
         if wait_on_feedback:
             while supervisor.step(timestep) != -1:
-                if resilience_manager and resilience_manager.tick_halt_timer(
-                    supervisor.getTime(), resilience_manager.start_time
-                ):
-                    return "HALTED"
+                if resilience_check:
+                    resilient = resilience_check()
+                    if not resilient:
+                        if resilience_manager and resilience_manager.tick_halt_timer(
+                            supervisor.getTime(), resilience_manager.start_time
+                        ):
+                            return "HALTED"
                 if almost_equal(sensor.getValue(), target):
                     break
     else:
@@ -328,10 +336,13 @@ def set_gripper(supervisor, arm, open, torque_when_gripping, timestep, wait_on_f
         motor.setPosition(target)
         if wait_on_feedback:
             while supervisor.step(timestep) != -1:
-                if resilience_manager and resilience_manager.tick_halt_timer(
-                    supervisor.getTime(), resilience_manager.start_time
-                ):
-                    return "HALTED"
+                if resilience_check:
+                    resilient = resilience_check()
+                    if not resilient:
+                        if resilience_manager and resilience_manager.tick_halt_timer(
+                            supervisor.getTime(), resilience_manager.start_time
+                        ):
+                            return "HALTED"
                 left_contact  = contacts[0].getValue()
                 right_contact = contacts[1].getValue()
                 if (left_contact > 0.0 and right_contact > 0.0) or almost_equal(sensor.getValue(), target):

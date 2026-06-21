@@ -173,7 +173,7 @@ def run_simulation(config_path, use_ros=True, psi_log_path=None, delta_log_path=
         RM.current_attacks = active_attacks
 
         attack_executor.update(active_attacks)
-        attack_executor.apply()
+        attack_executor.apply(resilience_manager=RM)
 
         # Update IDS
         components = {attack["component"] for attack in active_attacks}

@@ -23,8 +23,12 @@ class AttackExecutor:
         self.active_attacks = attacks
 
     def has_active_attacks(self):
-        #print("active attacks")
         return len(self.active_attacks) > 0
+
+    def has_active_wheel_attacks(self):
+        """True only when a wheel device is under attack (blocks apply_wheel_speeds)."""
+        wheel_devices = {"left_wheels", "right_wheels"}
+        return any(a["component"] in wheel_devices for a in self.active_attacks)
     
     def neutralized(self, neutralized_devices):
         """Remove attacks that has been mitigated by RM"""
@@ -37,13 +41,13 @@ class AttackExecutor:
             self.random_value.pop(comp, None)
 
 
-    def apply(self):
+    def apply(self, resilience_manager=None):
         for attack in self.active_attacks:
-            self.apply_attack(attack["component"], attack["type"])
+            self.apply_attack(attack["component"], attack["type"], resilience_manager)
 
     
     # Attack Types
-    def apply_attack(self, component_name, attack_type):
+    def apply_attack(self, component_name, attack_type, resilience_manager=None):
         # Get low level representation
         component = self.component_map.get(component_name, [])
 
@@ -103,16 +107,20 @@ class AttackExecutor:
 
         # Gripper attacks
         if attack_type == AttackType.GRIP_WEAK:
-            """Reduce gripper torque to make gripping weak"""
-            if component_name == "left_gripper":
-                motor = self.supervisor.getDevice(LEFT_FINGER_MOTOR)
+            # Severity scales with resilience state so physical behaviour matches the formal model
+            not_resilient = (
+                resilience_manager is not None
+                and resilience_manager.current_resilient == "NOT RESILIENT"
+            )
+            motor_name = (
+                LEFT_FINGER_MOTOR if component_name == "left_gripper"
+                else RIGHT_FINGER_MOTOR
+            )
+            if component_name in ("left_gripper", "right_gripper"):
+                motor = self.supervisor.getDevice(motor_name)
                 if motor:
-                    motor.setAvailableTorque(0.01)  # Set to minimal torque
-            
-            elif component_name == "right_gripper":
-                motor = self.supervisor.getDevice(RIGHT_FINGER_MOTOR)
-                if motor:
-                    motor.setAvailableTorque(0.01)  # Set to minimal torque
+                    torque = 0.01 if not_resilient else motor.getMaxTorque() * 0.30
+                    motor.setAvailableTorque(torque)
 
 
 '''

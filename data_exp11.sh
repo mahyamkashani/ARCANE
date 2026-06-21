@@ -6,15 +6,20 @@
 # alpha_crit=0.04, alpha_base=0.02 — psi stays above theta_crit=0.8 throughout.
 # All devices are mitigatable → system recovers after each wave → task DONE.
 #
+# left_gripper is intentionally never attacked so the robot keeps holding the
+# bottle during navigation.  right_gripper (tau=1, non-critical) is used instead
+# where a gripper attack is needed, as it does not affect the working arm.
+#
 #   psi = exp(-alpha_crit × k_crit) × exp(-alpha_base × k_base)
 #
-#   Wave  Critical (tau=2)            Non-crit (tau=1)   k_c  k_b  psi
-#   1     left_wheels                 right_arm           1    1    ≈0.941
-#   2     left_wheels + left_arm      right_arm           2    1    ≈0.922
-#   3     left_wheels + left_arm      right_arm           3    2    ≈0.869
-#         + left_gripper              + right_gripper
-#   4     left_arm + left_gripper     right_wheels        2    2    ≈0.887
-#                                     + right_arm
+#   Wave  Critical (tau=2)       Non-crit (tau=1)              k_c  k_b  psi
+#   1     left_wheels            right_arm                      1    1    ≈0.942
+#   2     left_wheels            right_arm                      2    1    ≈0.922
+#         + left_arm
+#   3     left_wheels            right_arm                      2    2    ≈0.887
+#         + left_arm             + right_gripper:GRIP_WEAK
+#   4     left_arm               right_wheels + right_arm       1    3    ≈0.904
+#                                + right_gripper:GRIP_WEAK
 #
 # All waves remain above theta_crit=0.8 → gamma=1, system RESILIENT → task DONE.
 #
@@ -45,8 +50,8 @@ RESULT="${2:-../results/framework_correctness/exp11.csv}"
 
 WAVE1="${WAVE1:-left_wheels:STOP,right_arm:STOP}"
 WAVE2="${WAVE2:-left_wheels:STOP,left_arm:STOP,right_arm:STOP}"
-WAVE3="${WAVE3:-left_wheels:STOP,left_arm:STOP,left_gripper:GRIP_WEAK,right_arm:STOP,right_gripper:GRIP_WEAK}"
-WAVE4="${WAVE4:-left_arm:STOP,left_gripper:GRIP_WEAK,right_wheels:UNDERSPEED,right_arm:STOP}"
+WAVE3="${WAVE3:-left_wheels:STOP,left_arm:STOP,right_arm:STOP,right_gripper:GRIP_WEAK}"
+WAVE4="${WAVE4:-left_arm:STOP,right_wheels:UNDERSPEED,right_arm:STOP,right_gripper:GRIP_WEAK}"
 
 _make_yaml() {
   local attack="$1"
@@ -78,7 +83,7 @@ SIM_PID=$!
 # --- 3) inject attack waves --------------------------------------------------
 ( sleep "$DELAY2"
   echo "[Wave 1 @ ${DELAY2}s]  $_yaml1"
-  echo "  k_crit=1, k_base=1 → psi≈0.941  (above theta_crit=0.80)"
+  echo "  k_crit=1, k_base=1 → psi≈0.942  (above theta_crit=0.80)"
   ros2 topic pub --once /active_attacks my_attack_interfaces/msg/AttackState \
     "{compromised_devices: $_yaml1}" ) &
 
@@ -90,13 +95,15 @@ SIM_PID=$!
 
 ( sleep "$DELAY4"
   echo "[Wave 3 @ ${DELAY4}s]  $_yaml3"
-  echo "  k_crit=3, k_base=2 → psi≈0.869  (above theta_crit=0.80)"
+  echo "  k_crit=2, k_base=2 → psi≈0.887  (above theta_crit=0.80)"
+  echo "  right_gripper:GRIP_WEAK — working arm unaffected, bottle held"
   ros2 topic pub --once /active_attacks my_attack_interfaces/msg/AttackState \
     "{compromised_devices: $_yaml3}" ) &
 
 ( sleep "$DELAY5"
   echo "[Wave 4 @ ${DELAY5}s]  $_yaml4"
-  echo "  k_crit=2, k_base=2 → psi≈0.887  (above theta_crit=0.80)"
+  echo "  k_crit=1, k_base=3 → psi≈0.904  (above theta_crit=0.80)"
+  echo "  right_gripper:GRIP_WEAK — working arm unaffected, bottle held"
   ros2 topic pub --once /active_attacks my_attack_interfaces/msg/AttackState \
     "{compromised_devices: $_yaml4}" ) &
 

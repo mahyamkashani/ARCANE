@@ -70,11 +70,11 @@ def pickup_object(supervisor, arm, object_name, timestep, resilience_check=None,
     # - handled, vridning inåt(+) och utåt (-)
 
     # Set arm above object
-    result = pr2.set_arm_position(supervisor, arm, 0.0, 0.0, 0.0, -0.5, 0.0, timestep, resilience_manager=resilience_manager)
+    result = pr2.set_arm_position(supervisor, arm, 0.0, 0.0, 0.0, -0.5, 0.0, timestep, resilience_manager=resilience_manager, resilience_check=resilience_check)
     if result == "HALTED": return "HALTED"
 
     # open gripper
-    result = pr2.set_gripper(supervisor, arm, open=True, torque_when_gripping=0.0, timestep=timestep, resilience_manager=resilience_manager)
+    result = pr2.set_gripper(supervisor, arm, open=True, torque_when_gripping=0.0, timestep=timestep, resilience_manager=resilience_manager, resilience_check=resilience_check)
     if result == "HALTED": return "HALTED"
 
     goal = [-1.38701,0.288347] # Position to pikc up water bottle @ table1
@@ -82,15 +82,15 @@ def pickup_object(supervisor, arm, object_name, timestep, resilience_check=None,
     if result == "HALTED": return "HALTED"
 
     # lower arm towards object (positive shoulder_lift = arm goes down)
-    result = pr2.set_arm_position(supervisor, arm, 0.0, 0.1, 0.0, 0.0, 0.0, timestep, resilience_manager=resilience_manager)
+    result = pr2.set_arm_position(supervisor, arm, 0.0, 0.1, 0.0, 0.0, 0.0, timestep, resilience_manager=resilience_manager, resilience_check=resilience_check)
     if result == "HALTED": return "HALTED"
 
     # Close gripper
-    result = pr2.set_gripper(supervisor, arm, open=False, torque_when_gripping=10.0, timestep=timestep, resilience_manager=resilience_manager)
+    result = pr2.set_gripper(supervisor, arm, open=False, torque_when_gripping=10.0, timestep=timestep, resilience_manager=resilience_manager, resilience_check=resilience_check)
     if result == "HALTED": return "HALTED"
 
     # Bring arm up
-    result = pr2.set_arm_position(supervisor, arm, 0.0, 0.0, 0.0, -0.5, 0.0, timestep, resilience_manager=resilience_manager)
+    result = pr2.set_arm_position(supervisor, arm, 0.0, 0.0, 0.0, -0.5, 0.0, timestep, resilience_manager=resilience_manager, resilience_check=resilience_check)
 
     return result
 
@@ -113,15 +113,15 @@ def navigate_and_pickup_object(supervisor, waypoints, goal_name, arm, object_nam
         return "HALTED"
 
     # Lower arm to drop position (same depth as pickup)
-    result = pr2.set_arm_position(supervisor, arm, 0.0, 0.1, 0.0, 0.0, 0.0, timestep, resilience_manager=resilience_manager)
+    result = pr2.set_arm_position(supervisor, arm, 0.0, 0.1, 0.0, 0.0, 0.0, timestep, resilience_manager=resilience_manager, resilience_check=resilience_check)
     if result == "HALTED": return "HALTED"
 
     # Open gripper — bottle fills the full opening so it won't widen further
-    result = pr2.set_gripper(supervisor, arm, open=True, torque_when_gripping=0.0, timestep=timestep, resilience_manager=resilience_manager)
+    result = pr2.set_gripper(supervisor, arm, open=True, torque_when_gripping=0.0, timestep=timestep, resilience_manager=resilience_manager, resilience_check=resilience_check)
     if result == "HALTED": return "HALTED"
 
     # Raise arm upward: bottle slides down onto table while gripper lifts clear
-    result = pr2.set_arm_position(supervisor, arm, 0.0, 0.0, 0.0, -0.5, 0.0, timestep, resilience_manager=resilience_manager)
+    result = pr2.set_arm_position(supervisor, arm, 0.0, 0.0, 0.0, -0.5, 0.0, timestep, resilience_manager=resilience_manager, resilience_check=resilience_check)
     if result == "HALTED": return "HALTED"
 
     # Move back away from table
