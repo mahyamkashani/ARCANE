@@ -12,26 +12,26 @@ from pr2_controller.disruption_degradation import monotonic_degradation, exponen
 
 # ---- experiment json thresholds ----------------------------------------
 THETA_CRIT = 0.8
-THETA_BASE = 0.5
+THETA_BASE = 0.75
 ALPHA_CRIT = 0.04
 ALPHA_BASE = 0.02
 
 # ---- psi function selection ---------------------------------------------
-PSI_FN      = exponential_degradation #monotonic_degradation
+PSI_FN      = monotonic_degradation #exponential_degradation #monotonic_degradation
 
 # ---- psi-family parameters ----------------------------------------------
-ALPHA_CRITS = [0.04, 0.05, 0.06, 0.08]
+ALPHA_CRITS = [0.2, 0.3, 0.4, 0.5]
 N_MAX       = 5
 TASK        = "task"
 GOAL        = "goal"
 
 # ---- file paths ---------------------------------------------------------
 HERE     = Path(__file__).resolve().parent
-CSV_PATH       = HERE / "framework_correctness" / "exp11_psi.csv"
-DELTA_CSV_PATH = HERE / "framework_correctness" / "exp11_delta.csv"
-PSI_OUT        = str(HERE / "exp11_psi_monotonic.pdf")
-PHI_OUT        = str(HERE / "exp11_psi_timeline.pdf")
-DELTA_OUT      = str(HERE / "exp11_delta_timeline.pdf")
+CSV_PATH       = HERE / "framework_correctness" / "exp5_psi.csv"
+DELTA_CSV_PATH = HERE / "framework_correctness" / "exp9_delta.csv"
+PSI_OUT        = str(HERE / "exp5_psi_monotonic.pdf")
+PHI_OUT        = str(HERE / "exp5_psi_timeline.pdf")
+DELTA_OUT      = str(HERE / "exp5_delta_timeline.pdf")
 
 
 def load_psi_csv(path):
@@ -67,7 +67,6 @@ def psi_k(k, alpha_crit):
 
 
 def plot_psi_family():
-    """Left figure: psi(|S|) family, monotonic non-increasing."""
     fig, ax = plt.subplots(figsize=(7.0, 5.2))
     ks = list(range(0, N_MAX + 1))
     for ac in ALPHA_CRITS:
@@ -83,14 +82,16 @@ def plot_psi_family():
                label=rf"$\theta_{{crit}} = {THETA_CRIT}$")
     ax.axhline(THETA_BASE, color="gray", ls=":", lw=1.2,
                label=rf"$\theta_{{base}} = {THETA_BASE}$")
-    ax.set_xlabel(r"number of disrupted (critical) devices  $k = |S|$")
-    ax.set_ylabel(r"$\psi$   (performance)")
-    ax.set_title(r"$\psi = \max(0,\ 1 - k\,\alpha_{crit})$  — monotonic non-increasing")
+    ax.set_xlabel(r"number of disrupted (critical) devices  $k = |S|$", fontsize=16)
+    ax.set_ylabel(r"$\psi$   (performance)", fontsize=16)
+    ax.set_title(r"$\psi = \max(0,\ 1 - k\,\alpha_{crit})$", fontsize=20)
+    #ax.set_title(r"$\psi = e^{-\alpha_{crit} k_{crit}}$", fontsize=20)
     ax.set_xticks(ks)
     ax.set_xlim(-0.15, N_MAX + 0.15)
     ax.set_ylim(0, 1.03)
+    ax.tick_params(axis="both", labelsize=14)
     ax.grid(True, alpha=0.3)
-    ax.legend(loc="upper right", fontsize=9)
+    ax.legend(loc="upper right", fontsize=12)
     fig.tight_layout()
     fig.savefig(PSI_OUT, dpi=150)
     plt.close(fig)
@@ -98,7 +99,6 @@ def plot_psi_family():
 
 
 def plot_psi_timeline():
-    """Right figure: recorded psi(t) from exp2_psi.csv."""
     times, psis = load_psi_csv(CSV_PATH)
     t_end = max(times)
 
@@ -114,9 +114,9 @@ def plot_psi_timeline():
 
     # threshold lines
     ax.axhline(THETA_CRIT, color="firebrick", ls="--", lw=1.6,
-               label=rf"$\theta_{{crit}} = {THETA_CRIT}$  (critical device threshold)")
+               label=rf"$\theta_{{crit}} = {THETA_CRIT}$")
     ax.axhline(THETA_BASE, color="gray", ls=":", lw=1.2,
-               label=rf"$\theta_{{base}} = {THETA_BASE}$  (non-critical device threshold)")
+               label=rf"$\theta_{{base}} = {THETA_BASE}$")
 
     # recorded psi
     ax.step(times, psis, where="post", color="tab:blue", lw=2.0, zorder=3,
@@ -126,22 +126,23 @@ def plot_psi_timeline():
     # band labels
     ax.text(t_end - 0.3, (1.0 + THETA_CRIT) / 2,
             r"Tolerable  ($\gamma=1$, any attack)",
-            ha="right", va="center", color="green", fontsize=10)
+            ha="right", va="center", color="green", fontsize=13, fontweight="bold")
     ax.text(t_end - 0.3, (THETA_BASE + THETA_CRIT) / 2,
             "Tolerable if non-critical attack  ($\\gamma=1$)\n"
             "Not tolerable if critical attack  ($\\gamma=0$)",
-            ha="right", va="center", color="darkorange", fontsize=9)
+            ha="right", va="center", color="darkorange", fontsize=12, fontweight="bold")
     ax.text(t_end - 0.3, THETA_BASE / 2,
             r"Not tolerable  ($\gamma=0$, any attack)",
-            ha="right", va="center", color="firebrick", fontsize=10)
+            ha="right", va="center", color="firebrick", fontsize=13, fontweight="bold")
 
-    ax.set_xlabel("simulation time  [s]")
-    ax.set_ylabel(r"$\psi$   (performance)")
-    ax.set_title(r"$\psi(t)$ over time")
+    ax.set_xlabel("simulation time  [s]", fontsize=16)
+    ax.set_ylabel(r"$\psi$   (performance)", fontsize=16)
+    ax.set_title(r"$\psi(t)$", fontsize=20)
     ax.set_xlim(0, t_end + 1)
     ax.set_ylim(0, 1.05)
+    ax.tick_params(axis="both", labelsize=14)
     ax.grid(True, alpha=0.3)
-    ax.legend(loc="lower right", fontsize=9)
+    ax.legend(loc="lower left", fontsize=14)
     fig.tight_layout()
     fig.savefig(PHI_OUT, dpi=150)
     plt.close(fig)
@@ -149,7 +150,6 @@ def plot_psi_timeline():
 
 
 def plot_delta_timeline():
-    """delta(t): vertical time-region blocks (green=normal, red=disrupted) + transition arrows."""
     times, deltas, operations = load_delta_csv(DELTA_CSV_PATH)
 
     # Strip the final task-result marker row (delta=None)
@@ -204,7 +204,7 @@ def plot_delta_timeline():
         label_text = "Normal" if bop == "NORMAL" else "Disrupted"
         fc = "#1a7a42" if bop == "NORMAL" else "#8b0000"
         ax.text((bx0 + bx1) / 2, 0.5, label_text,
-                ha="center", va="center", fontsize=8,
+                ha="center", va="center", fontsize=13, rotation=90,
                 color=fc, fontweight="bold", alpha=0.55,
                 transform=ax.get_xaxis_transform(), zorder=1)
 
@@ -223,7 +223,7 @@ def plot_delta_timeline():
                 f"Attack {attack_count}",
                 xy=(t, 1.0),
                 xytext=(t + 0.15, 1.12),
-                fontsize=8, color="#c0392b",
+                fontsize=12, color="#c0392b",
                 arrowprops=dict(arrowstyle="->", color="#c0392b", lw=1.0,
                                 shrinkA=0, shrinkB=2),
                 zorder=5,
@@ -235,7 +235,7 @@ def plot_delta_timeline():
                 f"Recovery {recovery_count}",
                 xy=(t, 0.0),
                 xytext=(t + 0.15, 0.18),
-                fontsize=8, color="#1a7a42",
+                fontsize=11, color="#1a7a42",
                 arrowprops=dict(arrowstyle="->", color="#1a7a42", lw=1.0,
                                 shrinkA=0, shrinkB=2),
                 zorder=5,
@@ -247,20 +247,21 @@ def plot_delta_timeline():
         ax.axvline(final_t, color=fc, ls="-", lw=2.4, zorder=5)
         ax.text(final_t - 0.3, 0.5, f"Task {final_label}",
                 rotation=90, va="center", ha="right",
-                color=fc, fontsize=10, fontweight="bold")
+                color=fc, fontsize=13, fontweight="bold")
 
     # --- legend & axes -------------------------------------------------------
     legend_handles = [
         ax.get_lines()[0],
-        Patch(color="#2ecc71", alpha=0.55, label="Normal Operation  (δ=1)"),
+        Patch(color="#2ecc71", alpha=0.55, label="Normal (δ=1)"),
         Patch(color="#e74c3c", alpha=0.55, label="Disrupted  (δ=0)"),
     ]
-    ax.set_xlabel("simulation time  [s]")
-    ax.set_ylabel(r"$\delta$  (disruption)")
-    ax.set_title(r"$\delta(t)$, distruption over time")
+    ax.set_xlabel("simulation time  [s]", fontsize=16)
+    ax.set_ylabel(r"$\delta$  (disruption)", fontsize=16)
+    ax.set_title(r"$\delta(t)$, distruption over time", fontsize=20)
     ax.set_xlim(0, (final_t or t_end) + 2)
     ax.set_ylim(-0.25, 1.35)
     ax.set_yticks([0, 1])
+    ax.tick_params(axis="both", labelsize=14)
     ax.grid(axis="x", alpha=0.2)
 
     # Position spines at the data origin to form coordinate axes
@@ -274,7 +275,7 @@ def plot_delta_timeline():
     # Suppress x=0 tick label to avoid duplicate "0" at origin
     ax.set_xticks([t for t in ax.get_xticks() if t > 0])
 
-    ax.legend(handles=legend_handles, loc="upper right", fontsize=9)
+    ax.legend(handles=legend_handles, loc="upper right", fontsize=14)
     fig.tight_layout()
     fig.savefig(DELTA_OUT, dpi=150)
     plt.close(fig)
