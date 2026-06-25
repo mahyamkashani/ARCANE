@@ -317,7 +317,8 @@ def run_simulation(config_path, use_ros=True, psi_log_path=None, delta_log_path=
         "theta_base": RM.theta_base,
         "theta_crit": RM.theta_crit,
         "alpha_base": RM.alpha_base,
-        "psi": psi
+        "psi": psi,
+        "devices": ids.S,
     }
 
 

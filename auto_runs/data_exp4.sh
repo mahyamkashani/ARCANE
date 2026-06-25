@@ -11,7 +11,8 @@
 #
 set -u
 
-cd "$(dirname "$0")"
+#cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 DELAY="${DELAY:-5}"     # seconds to let Webots load before starting the controller, 5
 DELAY2="${DELAY2:-10}"   # seconds after launch before injecting attack1, 15

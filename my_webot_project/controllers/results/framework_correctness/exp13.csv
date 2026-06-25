@@ -1,0 +1,11 @@
+detection_rate,delta,gamma,resilient,result,theta_base,theta_crit,alpha_base,psi,devices
+0.9,0,1,NOT RESILIENT,HALTED,0.5,0.8,0.04,0.7557837414557255,"{left_gripper,left_wheels,right_gripper,right_wheels}"
+0.9,0,1,NOT RESILIENT,HALTED,0.5,0.8,0.04,0.7866278610665535,"{left_gripper,left_wheels,right_wheels}"
+0.9,0,1,NOT RESILIENT,HALTED,0.5,0.8,0.04,0.7557837414557255,"{left_gripper,left_wheels,right_gripper,right_wheels}"
+0.9,0,1,NOT RESILIENT,HALTED,0.5,0.8,0.04,0.7557837414557255,"{left_gripper,left_wheels,right_gripper,right_wheels}"
+0.9,0,1,NOT RESILIENT,HALTED,0.5,0.8,0.04,0.7866278610665535,"{left_gripper,left_wheels,right_wheels}"
+0.9,0,1,NOT RESILIENT,HALTED,0.5,0.8,0.04,0.7557837414557255,"{left_gripper,left_wheels,right_gripper,right_wheels}"
+0.9,0,1,NOT RESILIENT,HALTED,0.5,0.8,0.04,0.7866278610665535,"{left_gripper,left_wheels,right_wheels}"
+0.9,0,1,NOT RESILIENT,HALTED,0.5,0.8,0.04,0.7557837414557255,"{left_gripper,left_wheels,right_gripper,right_wheels}"
+0.9,0,1,NOT RESILIENT,HALTED,0.5,0.8,0.04,0.7557837414557255,"{left_gripper,left_wheels,right_gripper,right_wheels}"
+0.9,0,1,NOT RESILIENT,HALTED,0.5,0.8,0.04,0.7557837414557255,"{left_gripper,left_wheels,right_gripper,right_wheels}"

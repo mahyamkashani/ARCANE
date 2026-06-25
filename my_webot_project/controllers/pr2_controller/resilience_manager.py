@@ -114,9 +114,14 @@ class ResilienceManager:
     def tick_halt_timer(self, current_time, start_time):
         if self.baseline_time is None:
             return False
-        
+
         elapsed = current_time - start_time
         halt_threshold = self.baseline_time * self.halt_multiplier
+
+        # Absolute ceiling: always halt at 3×baseline regardless of mitigation state.
+        # Prevents the simulation from hanging when mitigation keeps cycling indefinitely.
+        if elapsed >= self.baseline_time * 3:
+            return True
 
         if self.current_resilient == "NOT RESILIENT" \
             and not self.pending_mitigation \

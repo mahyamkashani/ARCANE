@@ -1,12 +1,10 @@
 {
   "task": {
-    "type": "navigate_and_pickup",
-    "goal": "table2",
-    "object": "water_bottle",
-    "arm": "left"
+    "type": "navigate_to_goal",
+    "goal": "box2"
   },
 
-  "baseline_time": 48.8,
+  "baseline_time": 20,
 
   "obstacle_avoidance": false,
 
@@ -20,17 +18,17 @@
     "theta_base": 0.5,
     "alpha_crit": 0.08,
     "alpha_base": 0.04,
-    "kappa_crit": 0.0,
-    "kappa_base": 0.0
+    "kappa_crit": 0.1,
+    "kappa_base": 0.6
   },
 
   "tau": {
     "left_wheels":   2,
-    "right_wheels":  0,
-    "left_arm":      2,
-    "right_arm":     2,
+    "right_wheels":  2,
+    "left_arm":      1,
+    "right_arm":     1,
     "left_gripper":  2,
-    "right_gripper": 0
+    "right_gripper": 1
   },
 
   "epsilon": {
@@ -38,6 +36,6 @@
   },
 
   "mitigation": {
-    "enabled_devices": []
+    "enabled_devices": ["left_wheels", "right_wheels"]
   }
 }

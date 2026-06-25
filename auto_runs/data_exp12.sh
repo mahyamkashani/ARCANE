@@ -1,19 +1,18 @@
 #!/bin/bash
 #
-# data_exp12.sh — three escalating mixed-device waves for experiment12.json.
+# data_exp12.sh — four escalating waves for experiment12.json.
 #
-# Attacks both critical (tau=2) and non-critical (tau=1) devices.
-# alpha_crit=0.08, alpha_base=0.04 — psi gradually crosses theta_crit=0.8 on wave 3.
+# Attacks only critical (tau=2) devices.
+# alpha_crit=0.08 — psi gradually crosses theta_crit=0.8 on wave 3.
 # No mitigation enabled → system cannot recover → task HALTED.
 #
 #   psi = exp(-alpha_crit × k_crit) × exp(-alpha_base × k_base)
 #
-#   Wave  Critical (tau=2)       Non-crit (tau=1)  k_c  k_b  psi      region
-#   1     left_wheels            right_arm          1    1    ≈0.887   tolerable
-#   2     left_wheels+left_arm   right_arm          2    1    ≈0.819   tolerable
-#   3     left_wheels+left_arm   right_arm          2    2    ≈0.787   NOT tolerable
-#                                + right_gripper                       → gamma=0
-#
+#   Wave  Critical (tau=2) devices                             k_c  psi      region
+#   1     left_wheels                                          1    ≈0.923   tolerable
+#   2     left_wheels+left_arm                                 2    ≈0.852   tolerable
+#   3     left_wheels+left_arm+left_gripper                    3    ≈0.787   NOT tolerable → gamma=0
+#   4     left_wheels+left_arm+left_gripper+right_arm          4    ≈0.726   NOT tolerable
 # After wave 3 psi drops below theta_crit=0.8 → gamma=0 → NOT RESILIENT.
 # No mitigation possible → HALTED at 2×baseline_time = 97.6 s.
 #
@@ -28,12 +27,14 @@
 #
 set -u
 
-cd "$(dirname "$0")"
+#cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 DELAY="${DELAY:-5}"     # Webots load time
-DELAY2="${DELAY2:-8}"   # Wave 1: first critical + non-critical
-DELAY3="${DELAY3:-25}"  # Wave 2: second critical added
-DELAY4="${DELAY4:-45}"  # Wave 3: second non-critical added → psi crosses threshold
+DELAY2="${DELAY2:-8}"   # Wave 1: first critical device
+DELAY3="${DELAY3:-20}"  # Wave 2: second critical device added
+DELAY4="${DELAY4:-25}"  # Wave 3: third critical device added → psi crosses theta_crit=0.8
+DELAY5="${DELAY5:-32}"  # Wave 4: fourth critical device (right_arm) added → psi drops further
 
 WORLD="my_webot_project/worlds/my_project_world.wbt"
 CONTROLLER="my_webot_project/controllers/manual_run.py"
@@ -41,9 +42,10 @@ CONTROLLER="my_webot_project/controllers/manual_run.py"
 CONFIG="${1:-configs/experiment12.json}"
 RESULT="${2:-../results/framework_correctness/exp12.csv}"
 
-WAVE1="${WAVE1:-left_wheels:STOP,right_arm:STOP}"
-WAVE2="${WAVE2:-left_wheels:STOP,left_arm:STOP,right_arm:STOP}"
-WAVE3="${WAVE3:-left_wheels:STOP,left_arm:STOP,right_arm:STOP,right_gripper:GRIP_WEAK}"
+WAVE1="${WAVE1:-left_wheels:STOP}"
+WAVE2="${WAVE2:-left_wheels:STOP, left_arm:STOP}"
+WAVE3="${WAVE3:-left_wheels:STOP,left_arm:STOP,left_gripper:STOP}"
+WAVE4="${WAVE4:-left_wheels:STOP,left_arm:STOP,left_gripper:STOP,right_arm:STOP}"
 
 _make_yaml() {
   local attack="$1"
@@ -56,6 +58,7 @@ _make_yaml() {
 _yaml1=$(_make_yaml "$WAVE1")
 _yaml2=$(_make_yaml "$WAVE2")
 _yaml3=$(_make_yaml "$WAVE3")
+_yaml4=$(_make_yaml "$WAVE4")
 
 # --- clean slate: kill any running Webots ------------------------------------
 clear
@@ -74,22 +77,29 @@ SIM_PID=$!
 # --- 3) inject escalating attack waves ---------------------------------------
 ( sleep "$DELAY2"
   echo "[Wave 1 @ ${DELAY2}s]  $_yaml1"
-  echo "  k_crit=1, k_base=1 → psi≈0.887  (above theta_crit=0.80, tolerable)"
+  echo "  k_crit=1, k_base=0 → psi≈0.923  (above theta_crit=0.80, tolerable)"
   ros2 topic pub --once /active_attacks my_attack_interfaces/msg/AttackState \
     "{compromised_devices: $_yaml1}" ) &
 
 ( sleep "$DELAY3"
   echo "[Wave 2 @ ${DELAY3}s]  $_yaml2"
-  echo "  k_crit=2, k_base=1 → psi≈0.819  (above theta_crit=0.80, tolerable)"
+  echo "  k_crit=2, k_base=0 → psi≈0.852  (above theta_crit=0.80, tolerable)"
   ros2 topic pub --once /active_attacks my_attack_interfaces/msg/AttackState \
     "{compromised_devices: $_yaml2}" ) &
 
 ( sleep "$DELAY4"
   echo "[Wave 3 @ ${DELAY4}s]  $_yaml3"
-  echo "  k_crit=2, k_base=2 → psi≈0.787  (BELOW theta_crit=0.80 → gamma=0)"
+  echo "  k_crit=3, k_base=0 → psi≈0.787  (BELOW theta_crit=0.80 → gamma=0)"
   echo "  No mitigation available → system will HALT at 2×baseline (97.6 s)"
   ros2 topic pub --once /active_attacks my_attack_interfaces/msg/AttackState \
     "{compromised_devices: $_yaml3}" ) &
+
+( sleep "$DELAY5"
+  echo "[Wave 4 @ ${DELAY5}s]  $_yaml4"
+  echo "  k_crit=4, k_base=0 → psi≈0.726  (BELOW theta_crit=0.80 → gamma=0)"
+  echo "  No mitigation available → system will HALT at 2×baseline (97.6 s)"
+  ros2 topic pub --once /active_attacks my_attack_interfaces/msg/AttackState \
+    "{compromised_devices: $_yaml4}" ) &
 
 # --- wait for the experiment to finish, then shut Webots down ----------------
 wait "$SIM_PID"

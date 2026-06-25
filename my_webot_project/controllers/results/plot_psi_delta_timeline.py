@@ -12,26 +12,26 @@ from pr2_controller.disruption_degradation import monotonic_degradation, exponen
 
 # ---- experiment json thresholds ----------------------------------------
 THETA_CRIT = 0.8
-THETA_BASE = 0.75
-ALPHA_CRIT = 0.04
-ALPHA_BASE = 0.02
+THETA_BASE = 0.5
+ALPHA_CRIT = 0.08
+ALPHA_BASE = 0.04
 
 # ---- psi function selection ---------------------------------------------
 PSI_FN      = monotonic_degradation #exponential_degradation #monotonic_degradation
 
 # ---- psi-family parameters ----------------------------------------------
-ALPHA_CRITS = [0.2, 0.3, 0.4, 0.5]
+ALPHA_CRITS = [0.02, 0.05, 0.1, 0.15]
 N_MAX       = 5
 TASK        = "task"
 GOAL        = "goal"
 
 # ---- file paths ---------------------------------------------------------
 HERE     = Path(__file__).resolve().parent
-CSV_PATH       = HERE / "framework_correctness" / "exp5_psi.csv"
+CSV_PATH       = HERE / "framework_correctness" / "exp9_psi.csv"
 DELTA_CSV_PATH = HERE / "framework_correctness" / "exp9_delta.csv"
-PSI_OUT        = str(HERE / "exp5_psi_monotonic.pdf")
-PHI_OUT        = str(HERE / "exp5_psi_timeline.pdf")
-DELTA_OUT      = str(HERE / "exp5_delta_timeline.pdf")
+PSI_OUT        = str(HERE / "exp9_psi_monotonic.pdf")
+PHI_OUT        = str(HERE / "exp9_psi_timeline.pdf")
+DELTA_OUT      = str(HERE / "exp9_delta_timeline.pdf")
 
 
 def load_psi_csv(path):
@@ -82,7 +82,7 @@ def plot_psi_family():
                label=rf"$\theta_{{crit}} = {THETA_CRIT}$")
     ax.axhline(THETA_BASE, color="gray", ls=":", lw=1.2,
                label=rf"$\theta_{{base}} = {THETA_BASE}$")
-    ax.set_xlabel(r"number of disrupted (critical) devices  $k = |S|$", fontsize=16)
+    ax.set_xlabel(r"number of critical devices  $k = |S|$", fontsize=16)
     ax.set_ylabel(r"$\psi$   (performance)", fontsize=16)
     ax.set_title(r"$\psi = \max(0,\ 1 - k\,\alpha_{crit})$", fontsize=20)
     #ax.set_title(r"$\psi = e^{-\alpha_{crit} k_{crit}}$", fontsize=20)
@@ -124,7 +124,7 @@ def plot_psi_timeline():
     ax.plot(times, psis, "o", color="tab:blue", ms=4, alpha=0.8, zorder=4)
 
     # band labels
-    ax.text(t_end - 0.3, (1.0 + THETA_CRIT) / 2,
+    ax.text(t_end - 0.3, (1.0 + THETA_CRIT) / 2 - 0.05,
             r"Tolerable  ($\gamma=1$, any attack)",
             ha="right", va="center", color="green", fontsize=13, fontweight="bold")
     ax.text(t_end - 0.3, (THETA_BASE + THETA_CRIT) / 2,

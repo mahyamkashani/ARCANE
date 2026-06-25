@@ -47,7 +47,8 @@ def log_result(file_path, output):
                 "theta_crit",
                 "alpha_base",
                 #"alpha_crit",
-                "psi"
+                "psi",
+                "devices",
 
             ])
 
@@ -63,5 +64,6 @@ def log_result(file_path, output):
             output["theta_crit"],
             output["alpha_base"],
             #output["alpha_crit"],
-            output["psi"]
+            output["psi"],
+            "{" + ",".join(sorted(output["devices"])) + "}",
         ])

@@ -54,10 +54,8 @@ class AttackExecutor:
 
         if attack_type == AttackType.STOP:
             for name in component:
-                #print(name)
                 motor = self.supervisor.getDevice(name)
-                if motor:
-                    #print(f'settng motor speed')
+                if motor and hasattr(motor, 'setPosition'):
                     motor.setPosition(float('inf'))
                     motor.setVelocity(0.0)
         # overspeed
@@ -72,7 +70,7 @@ class AttackExecutor:
 
             for name in component:
                 motor = self.supervisor.getDevice(name)
-                if motor:
+                if motor and hasattr(motor, 'setPosition'):
                     motor.setPosition(float('inf'))
                     motor.setVelocity(MAX_WHEEL_SPEED * ran)
 
@@ -80,28 +78,21 @@ class AttackExecutor:
         elif attack_type == AttackType.UNDERSPEED:
 
             if component_name not in self.random_value:
-                #self.random_value[component_name] = random.uniform(0.5, 1.0)
                 self.random_value[component_name] = 0.6
 
             ran = self.random_value[component_name]
 
-            #print(f"[ATTACK] {component_name} underspeed factor: {ran}")
-
             for name in component:
                 motor = self.supervisor.getDevice(name)
-                if motor:
+                if motor and hasattr(motor, 'setPosition'):
                     motor.setPosition(float('inf'))
                     motor.setVelocity(MAX_WHEEL_SPEED * ran)
 
-        
-        
         # Go backwards
         if attack_type == AttackType.BACKWARD:
             for name in component:
-                #print(name)
                 motor = self.supervisor.getDevice(name)
-                if motor:
-                    #print(f'settng motor speed')
+                if motor and hasattr(motor, 'setPosition'):
                     motor.setPosition(float('inf'))
                     motor.setVelocity(-MAX_WHEEL_SPEED * 0.5)
 
